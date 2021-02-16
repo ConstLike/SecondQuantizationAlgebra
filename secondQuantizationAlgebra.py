@@ -98,3 +98,9 @@ from sqaConvert import \
   convertF90_ERI,      \
   convertTeX,          \
   factorize
+
+#lsh
+from sqaSLee import \
+  HFFermi,          \
+  idxname,          \
+  weight_factor
