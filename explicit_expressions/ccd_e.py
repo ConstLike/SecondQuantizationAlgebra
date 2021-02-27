@@ -11,39 +11,30 @@ i  = [sqa.index('i%i' %j, [tg_c], True) for j in range(8)]
 r  = [sqa.index('r%i' %j, [tg_a], True) for j in range(8)]
 a  = [sqa.index('a%i' %j, [tg_v], True) for j in range(8)]
 m  = [sqa.index('m%i' %j, [tg_t], True) for j in range(8)]
+n  = [sqa.index('n%i' %j, [tg_t], True) for j in range(8)]
 
 t_sym = [ sqa.symmetry((1,0,3,2),1) ]
 W_sym = [ sqa.symmetry((1,0,3,2),1), sqa.symmetry((0,3,2,1),1) ]
 
-t_ts_ket_1 = [ sqa.tensor('t2', [a[0], a[3], i[0], i[1]], t_sym) ]
-t_ops_ket_1= [ sqa.sfExOp([i[0], i[1], a[0], a[3]]) ] 
-W_ts_ket_1 = [ sqa.tensor('W', [a[1], a[2], a[3], i[2]], W_sym) ]
-W_ops_ket_1= [ sqa.sfExOp([a[3], i[2], a[1], a[2]]) ] 
+W_ts_ket = [ sqa.tensor('W', [a[2], a[3], i[2], i[3]], W_sym) ]
+W_ops_ket= [ sqa.sfExOp([i[2], i[3], a[2], a[3]]) ] 
 
-t_ts_ket_2 = [ sqa.tensor('t2', [a[0], a[1], i[0], i[3]], t_sym) ]
-t_ops_ket_2= [ sqa.sfExOp([i[0], i[3], a[0], a[1]]) ] 
-W_ts_ket_2 = [ sqa.tensor('W', [i[3], a[2], i[1], i[2]], W_sym) ]
-W_ops_ket_2= [ sqa.sfExOp([i[1], i[2], i[3], a[2]]) ] 
-
-t_ts_bra_1 = [ sqa.tensor('t2', [i[4], i[5], a[4], a[7]], t_sym) ]
-t_ops_bra_1= [ sqa.sfExOp([a[4], a[7], i[4], i[5]]) ] 
-W_ts_bra_1 = [ sqa.tensor('W', [a[7], i[6], a[5], a[6]], W_sym) ]
-W_ops_bra_1= [ sqa.sfExOp([a[5], a[6], a[7], i[6]]) ] 
-
-t_ts_bra_2 = [ sqa.tensor('t2', [i[4], i[7], a[4], a[5]], t_sym) ]
-t_ops_bra_2= [ sqa.sfExOp([a[4], a[5], i[4], i[7]]) ] 
-W_ts_bra_2 = [ sqa.tensor('W', [i[5], i[6], i[7], a[6]], W_sym) ]
-W_ops_bra_2= [ sqa.sfExOp([i[7], a[6], i[5], i[6]]) ] 
+t_ts_bra = [ sqa.tensor('t2', [i[0], i[1], a[0], a[1]], t_sym) ]
+t_ops_bra= [ sqa.sfExOp([a[0], a[1], i[0], i[1]]) ] 
 
 terms = []
-Op1   = t_ts_ket_1 + t_ops_ket_1 + W_ts_ket_1 + W_ops_ket_1 + W_ts_bra_1 + W_ops_bra_1 + t_ts_bra_1 + t_ops_bra_1
-terms.append( sqa.term( 1.0, [], Op1) )
+#Op1   = t_ts_ket_1 + t_ops_ket_1 + W_ts_ket_1 + W_ops_ket_1 + W_ts_bra_1 + W_ops_bra_1 + t_ts_bra_1 + t_ops_bra_1
+#terms.append( sqa.term( 1.0, [], Op1) )
 #Op2 = t_ts_ket_2 + t_ops_ket_2 + W_ts_ket_2 + W_ops_ket_2 + W_ts_bra_1 + W_ops_bra_1 + t_ts_bra_1 + t_ops_bra_1
-#terms.append( sqa.term(-1.0, [], Op2) )
+#terms.append( sqa.term( 1.0, [], Op2) )
 #Op3 = t_ts_ket_1 + t_ops_ket_1 + W_ts_ket_1 + W_ops_ket_1 + W_ts_bra_2 + W_ops_bra_2 + t_ts_bra_2 + t_ops_bra_2
-#terms.append( sqa.term(-1.0, [], Op3) )
+#terms.append( sqa.term( 1.0, [], Op3) )
 #Op4 = t_ts_ket_2 + t_ops_ket_2 + W_ts_ket_2 + W_ops_ket_2 + W_ts_bra_2 + W_ops_bra_2 + t_ts_bra_2 + t_ops_bra_2
-#terms.append( sqa.term( 1.0, [], Op4) )
+#Op4 = t_ops_ket_2 + W_ops_ket_2 + W_ops_bra_2 + t_ops_bra_2
+#Op4 = t_ops_ket_2 + W_ops_ket_2 
+Op4 = W_ts_ket + W_ops_ket + t_ts_bra + t_ops_bra
+#Op4 = W_ops_bra_4 + t_ops_bra_4
+terms.append( sqa.term( 1.0, [], Op4) )
 
 print "pure"
 for t in terms:
@@ -55,7 +46,7 @@ Nterms = []
 for t in terms:
     Nterm = sqa.normalOrder( t )
     for tn in Nterm:
-        print tn
+        print tn, tn.tensors[-1].spin 
     Nterms += Nterm
 print ""
 
@@ -67,12 +58,9 @@ for t in Nterms:
     print tmp, tmp.tensors[-1].spin 
 print ""
 
-
-
 print "HF Fermi expectation form"
 result = []
 for t in Nterms2:
-#for t in Nterms:
     tmp = sqa.HFFermi( t )
     result.append( tmp )
     print tmp
@@ -90,8 +78,8 @@ for t in result:
     print t
 print ""
 
-#sqa.combineTerms(result, maxThreads = 10)
-##sqa.combineTerms(result)
+#sqa.combineTerms(result, maxThreads = 5)
+#sqa.combineTerms(result)
 #print "combined terms"
 #for t in result:
 #    print t

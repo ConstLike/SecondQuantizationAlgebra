@@ -45,6 +45,17 @@ def HFFermi(inTerm):
     elif isinstance(t, sfExOp):
       has_sfExOps = True
 
+
+  has_W = False
+  for t in inTerm.tensors:
+    if t.name == 'W':
+      has_W = True 
+
+  has_t2Wk = False
+  for t in inTerm.tensors:
+    if t.name == 't2Wk':
+      has_t2Wk = True
+
   # If not spin free excitation operators,
   # raise an error
   if not has_sfExOps:
@@ -56,6 +67,7 @@ def HFFermi(inTerm):
   # if the term is already normal ordered, return it unchanged
   elif not inTerm.isNormalOrdered():
     raise RuntimeError, "HFFermi requires normal ordered operators"
+
 
 #  # Normal ordering for creOp/desOp
 #  elif has_creDesOps:
@@ -143,43 +155,237 @@ def HFFermi(inTerm):
 #      outTerms.append( term(totalSign * inTerm.numConstant, inTerm.constants, outTensors) )
 
   # Normal ordering for sfExOps
-  elif has_sfExOps:
+  elif has_W:
 
     # Make separate lists of the spin free excitation operators and other tensors
     sfExOp_list = []
-    other_list  = []
+    kroneckerDelta_list  = []
+    W_list  = []
+    t_list  = []
     for t in inTerm.tensors:
       if isinstance(t, sfExOp):
         sfExOp_list.append(t.copy())
+      elif isinstance(t, kroneckerDelta):
+        kroneckerDelta_list.append(t.copy())
+      elif t.name == 'W':
+        W_list.append(t.copy())
+      elif t.name == 't2':
+        t_list.append(t.copy())
       else:
-        other_list.append(t.copy())
+        raise RuntimeError, "terms should be sfExOp, kroneckerDelta, W, or t2"
 
     # Initialize n, the number of remaining spin free excitation operators
     n = len(sfExOp_list)
     if n != 1:
         raise RuntimeError, "terms should have single sfExOp"
 
-    # 
     const = inTerm.numConstant
     order = sfExOp_list[0].order
-    for i in range(order): 
-        idx = sfExOp_list[0].indices[i+order] 
-        #print idx.indType
+    for idx in sfExOp_list[0].indices: 
         for typ in idx.indType:
             #print typ[0]
+    #TODO: when a,b exist in E, delta term should be remained
+    #TODO: this version just ignore the term 
             if typ == options.virtual_type:
                 const = 0.0 
 
     deltaFuncs = []
+    sfExOp_tmp= sfExOp_list[0]
+    order = sfExOp_tmp.order
     if const == inTerm.numConstant:
+        # scaling
+        # assign t2 spin from E spin
+        # sym1 : list of indices of sigma, sym2 : list of indices of tau
+        sym_list = []        
+        for t in t_list:
+            for i in range(2):   # 2 = len(t.indices)//2
+                sym_list.append( [t.indices[i].name, t.indices[i+2].name] )
+        #print sym_list 
+
+        for d in kroneckerDelta_list:
+            sym_list.append( [d.indices[0].name, d.indices[1].name] )
+        #print sym_list 
+
+        for i in range(order):
+            s1 = sfExOp_tmp.spin[0][i]
+            j  = sfExOp_tmp.spin[1].index(s1)
+            sym_list.append( [sfExOp_tmp.indices[i].name, sfExOp_tmp.indices[j].name] )
+        #print sym_list 
+            
+        for w in W_list:
+            for i in range(2):   # 2 = len(t.indices)//2
+                sym_list.append( [w.indices[i].name, w.indices[i+2].name] )
+        #print sym_list 
+
+        def common_member(a, b):
+            a_set = set(a)
+            b_set = set(b)
+            if (a_set & b_set):
+                return True 
+            else:
+                return False 
+
+        def common_list(sym_list, idx_c):
+            no_comm = True 
+            idx_nc = []
+            for sym in sym_list:
+                if common_member( idx_c, sym ):
+                    idx_c  += sym
+                    no_comm = False 
+                else:
+                    idx_nc += sym
+            return idx_nc, no_comm
+
+        for i, w in enumerate(W_list):
+            w_s = [w.indices[0].name, w.indices[2].name]
+            w_t = [w.indices[1].name, w.indices[3].name]
+            idx_c  = w_s[:] 
+            idx_nc = sym_list[:]
+            no_comm = True 
+
+            while no_comm:
+                idx_nc, no_comm = common_list(idx_nc, idx_c)
+
+            if not common_member ( w_t, idx_c ): const *= 2
+
+
         for i in range(order):
             index1 = sfExOp_list[0].indices[i]
             index2 = sfExOp_list[0].indices[i+order]
             deltaFuncs.append(kroneckerDelta([index1,index2])) 
-            const *= 2
-        outTerm = term(const, inTerm.constants, other_list + deltaFuncs)
+        #outTerm = term(const, inTerm.constants, kroneckerDelta_list + deltaFuncs + t_list + W_list)
+        outTerm = term(const, inTerm.constants, kroneckerDelta_list + deltaFuncs + [t_list[0]] + W_list + [t_list[1]])
+
     else:
-        outTerm = term(const, inTerm.constants, other_list + sfExOp_list)
+        outTerm = term(const, inTerm.constants, deltaFuncs + t_list + W_list + sfExOp_list)
+        #outTerm = term(const, inTerm.constants, deltaFuncs + [t_list[0]] + W_list + [t_list[1]] + sfExOp_list)
+        #outTerm = term(const, inTerm.constants, other_list + sfExOp_list)
+
+  # Normal ordering for sfExOps
+  elif has_t2Wk:
+
+    # Make separate lists of the spin free excitation operators and other tensors
+    sfExOp_list = []
+    kroneckerDelta_list  = []
+    t2Wk_list  = []
+    t2Wb_list  = []
+    for t in inTerm.tensors:
+      if isinstance(t, sfExOp):
+        sfExOp_list.append(t.copy())
+      elif isinstance(t, kroneckerDelta):
+        kroneckerDelta_list.append(t.copy())
+      elif t.name == 't2Wk':
+        t2Wk_list.append(t.copy())
+      elif t.name == 't2Wb':
+        t2Wb_list.append(t.copy())
+      else:
+        raise RuntimeError, "terms should be sfExOp, kroneckerDelta, t2Wk, or t2Wb"
+
+    # Initialize n, the number of remaining spin free excitation operators
+    n = len(sfExOp_list)
+    if n != 1:
+        raise RuntimeError, "terms should have single sfExOp"
+
+    const = inTerm.numConstant
+    order = sfExOp_list[0].order
+    for idx in sfExOp_list[0].indices: 
+        for typ in idx.indType:
+            #print typ[0]
+    #TODO: when a,b exist in E, delta term should be remained
+    #TODO: this version just ignore the term 
+            if typ == options.virtual_type:
+                const = 0.0 
+
+    deltaFuncs = []
+    sfExOp_tmp= sfExOp_list[0]
+    order = sfExOp_tmp.order
+    if const == inTerm.numConstant:
+        a0_flag = False 
+        a2_flag = False
+        a1_flag = False
+
+        # a0 
+        for d in kroneckerDelta_list:
+            if d.indices[0].name == "a0":
+                a_delta = d.indices[1].name
+            elif d.indices[1].name == "a0":
+                a_delta = d.indices[0].name
+
+        for wb in t2Wb_list:
+            for i in range(3):
+                if wb.indices[i+3].name == a_delta:
+                    i_t2Wb = wb.indices[i].name
+
+        E_spin = sfExOp_tmp.spin
+        for i in range(order):
+            if sfExOp_tmp.indices[i].name   == "i0":
+                spin_1 = E_spin[0][i]
+            if sfExOp_tmp.indices[i+3].name == i_t2Wb:
+                spin_2 = E_spin[1][i]
+
+        if spin_1 == spin_2: a0_flag = True
+
+        # a2 
+        for d in kroneckerDelta_list:
+            if d.indices[0].name == "a2":
+                a_delta = d.indices[1].name
+            elif d.indices[1].name == "a2":
+                a_delta = d.indices[0].name
+
+        for wb in t2Wb_list:
+            for i in range(3):
+                if wb.indices[i+3].name == a_delta:
+                    i_t2Wb = wb.indices[i].name
+
+        E_spin = sfExOp_tmp.spin
+        for i in range(order):
+            if sfExOp_tmp.indices[i].name   == "i2":
+                spin_1 = E_spin[0][i]
+            if sfExOp_tmp.indices[i+3].name == i_t2Wb:
+                spin_2 = E_spin[1][i]
+
+        if spin_1 == spin_2: a2_flag = True
+
+        # a1 
+        for d in kroneckerDelta_list:
+            if d.indices[0].name == "a1":
+                a_delta = d.indices[1].name
+            elif d.indices[1].name == "a1":
+                a_delta = d.indices[0].name
+
+        for wb in t2Wb_list:
+            for i in range(3):
+                if wb.indices[i+3].name == a_delta:
+                    i_t2Wb = wb.indices[i].name
+
+        E_spin = sfExOp_tmp.spin
+        for i in range(order):
+            if sfExOp_tmp.indices[i].name   == "i1":
+                spin_1 = E_spin[0][i]
+            if sfExOp_tmp.indices[i+3].name == i_t2Wb:
+                spin_2 = E_spin[1][i]
+
+        if spin_1 == spin_2: a1_flag = True
+
+        if a1_flag is False:
+            if a0_flag is True or a2_flag is True: const *= 2
+        else:
+            if a0_flag is True and a2_flag is True: const *= 4 
+            if a0_flag is False and a2_flag is False: const *= 2 
+
+
+        for i in range(order):
+            index1 = sfExOp_list[0].indices[i]
+            index2 = sfExOp_list[0].indices[i+order]
+            deltaFuncs.append(kroneckerDelta([index1,index2])) 
+        #outTerm = term(const, inTerm.constants, kroneckerDelta_list + deltaFuncs + t_list + W_list)
+        outTerm = term(const, inTerm.constants, kroneckerDelta_list + deltaFuncs + t2Wk_list + t2Wb_list)
+
+    else:
+        outTerm = term(const, inTerm.constants, deltaFuncs + t2Wk_list + t2Wb_list + sfExOp_list)
+        #outTerm = term(const, inTerm.constants, deltaFuncs + [t_list[0]] + W_list + [t_list[1]] + sfExOp_list)
+        #outTerm = term(const, inTerm.constants, other_list + sfExOp_list)
+
 
   else:
     raise RuntimeError, "HFFermi failed to choose what to do."
@@ -193,7 +399,6 @@ def idxname(inTerm):
   """
   1. change the index form (core: i_k, active: r_k, virtual: a_k, whole: m_k)
   """ 
-  
 
 #  if options.verbose:
 #    print "converting to normal order:  %s" %(str(inTerm))
@@ -362,7 +567,13 @@ def idxname(inTerm):
                 idx.name = idx_t_dict[idx.name]
                 ntot += 1 
 
-    outTerm = term(inTerm.numConstant, inTerm.constants, [Op_list[2]]+Op_list[0:2]+Op_list[3:5])
+#    # Op order determine
+#    opidx = [0, 1, 2, 3]
+#    for t in Op_list:
+#        if t.name == 't2' and t.indices[0].indType == options.virtual_type
+
+    #outTerm = term(inTerm.numConstant, inTerm.constants, [Op_list[2]]+Op_list[0:2]+Op_list[3:5])
+    outTerm = term(inTerm.numConstant, inTerm.constants, Op_list)
 
   else:
     raise RuntimeError, "HFFermi failed to choose what to do."
@@ -525,11 +736,18 @@ def weight_factor(inTerm):
                 orderj = len(tj.indices)/2
                 for jo in range(orderj):
                     idx1j = tj.indices[jo] 
-                    idx2j = tj.indices[jo+orderj] 
-                    if idx1i == idx1j and idx2i == idx2j:
+                    idx2j = tj.indices[jo+orderj]
+#                    print idx1i.name, idx2i.name, idx1j.name, idx2j.name 
+                    if idx1i.name == idx1j.name and idx2i.name == idx2j.name or \
+                       idx1i.name == idx2j.name and idx2i.name == idx1j.name:
                         nloops += 1
 
+
+
     scal = 2**nloops
+
+
+
     outTerm = term(scal*inTerm.numConstant, inTerm.constants, Op_list)
 
   else:
@@ -537,5 +755,109 @@ def weight_factor(inTerm):
 
   return outTerm
 
+
+def sort_noeqidx_terms(Terms_List):
+  """
+  """ 
+
+  eq_l  = []
+  neq_l = []
+  for terms in Terms_List:
+    neq = True
+    idx_dict = {}
+    for t in terms.tensors:
+      for idx in t.indices:
+        if idx.name not in idx_dict:
+          idx_dict[idx.name]  = 1 
+        else:
+          idx_dict[idx.name] += 1 
+
+    test = sum(1 for i in idx_dict.values() if i >= 3) 
+
+    if test == 0:
+      neq_l.append(terms)
+    else:          
+      eq_l.append(terms)
+
+  return ['eq'] + eq_l + ['noneq'] + neq_l 
+
+def SpinFree(inTerm):
+  ""
+  # check that inTerm is a term
+  if not isinstance(inTerm, term):
+    raise TypeError, "inTerm must be of class term"
+
+  # determine what types of operators the term contains
+  has_creDesOps = False
+  has_sfExOps = False
+  for t in inTerm.tensors:
+    if isinstance(t, creOp) or isinstance(t, desOp):
+      has_creDesOps = True
+    elif isinstance(t, sfExOp):
+      has_sfExOps = True
+
+  # If not spin free excitation operators,
+  # raise an error
+  if not has_sfExOps:
+    raise RuntimeError, "Present version of HFFermi can treat only sfExOp"
+
+  if has_creDesOps and has_sfExOps:
+    raise RuntimeError, "Present version of HFFermi can treat only sfExOp"
+
+  # if the term is already normal ordered, return it unchanged
+  elif not inTerm.isNormalOrdered():
+    raise RuntimeError, "HFFermi requires normal ordered operators"
+
+  # Normal ordering for sfExOps
+  elif has_sfExOps:
+
+    # Make separate lists of the spin free excitation operators and other tensors
+    sfExOp_list = []
+    other_list  = []
+    for t in inTerm.tensors:
+      if isinstance(t, sfExOp):
+        sfExOp_list.append(t.copy())
+      else:
+        other_list.append(t.copy())
+
+    # Initialize n, the number of remaining spin free excitation operators
+    n = len(sfExOp_list)
+    if n != 1:
+        raise RuntimeError, "terms should have single sfExOp"
+
+    # obtain rm same index in Spin-Free Op 
+    sfExOp_tmp = sfExOp_list[0]
+    const_tmp = inTerm.numConstant
+    order_tmp = sfExOp_list[0].order
+    spin_tmp  = sfExOp_list[0].spin
+    Dup = True 
+    while Dup:
+        Dup = False 
+        for i in range(order_tmp): 
+            idxi = sfExOp_tmp.indices[order_tmp-i-1] 
+            name_idxi = idxi.name
+            for j in range(order_tmp): 
+                idxj = sfExOp_tmp.indices[j+order_tmp] 
+                name_idxj = idxj.name
+                if name_idxi == name_idxj:
+                    Dup = True
+                    indices_tmp = []
+                    for k in range(len(sfExOp_tmp.indices)): 
+                        if k != order_tmp-i-1:
+                            if k != j+order_tmp:
+                                indices_tmp.append(sfExOp_tmp.indices[k].copy())
+                    sfExOp_tmp = sfExOp(indices_tmp, spin=spin_tmp) 
+                    const_tmp *= (-1)**(j+order_tmp-(order_tmp-i-1)+1) 
+                    order_tmp = sfExOp_tmp.order
+                    #print i, j, name_idxi, name_idxj, order_tmp, sfExOp_tmp
+                    break
+            if Dup: break
+
+    outTerm = term(const_tmp, inTerm.constants, other_list + [sfExOp_tmp])
+
+  else:
+    raise RuntimeError, "HFFermi failed to choose what to do."
+
+  return outTerm
 
 

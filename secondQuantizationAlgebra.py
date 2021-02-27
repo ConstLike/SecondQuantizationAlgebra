@@ -100,7 +100,9 @@ from sqaConvert import \
   factorize
 
 #lsh
-from sqaSLee import \
-  HFFermi,          \
-  idxname,          \
-  weight_factor
+from sqaSLee import   \
+  HFFermi,            \
+  idxname,            \
+  weight_factor,      \
+  sort_noeqidx_terms, \
+  SpinFree

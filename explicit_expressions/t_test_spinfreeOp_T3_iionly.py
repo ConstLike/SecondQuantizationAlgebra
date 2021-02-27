@@ -36,12 +36,12 @@ W_ts_bra_2 = [ sqa.tensor('W', [i[5], i[6], i[7], a[6]], W_sym) ]
 W_ops_bra_2= [ sqa.sfExOp([i[7], a[6], i[5], i[6]]) ] 
 
 terms = []
-Op1 = t_ts_ket_1 + t_ops_ket_1 + W_ts_ket_1 + W_ops_ket_1 + W_ts_bra_1 + W_ops_bra_1 + t_ts_bra_1 + t_ops_bra_1
-terms.append( sqa.term( 1.0, [], Op1) )
-Op2 = t_ts_ket_2 + t_ops_ket_2 + W_ts_ket_2 + W_ops_ket_2 + W_ts_bra_1 + W_ops_bra_1 + t_ts_bra_1 + t_ops_bra_1
-terms.append( sqa.term(-1.0, [], Op2) )
-Op3 = t_ts_ket_1 + t_ops_ket_1 + W_ts_ket_1 + W_ops_ket_1 + W_ts_bra_2 + W_ops_bra_2 + t_ts_bra_2 + t_ops_bra_2
-terms.append( sqa.term(-1.0, [], Op3) )
+#Op1   = t_ts_ket_1 + t_ops_ket_1 + W_ts_ket_1 + W_ops_ket_1 + W_ts_bra_1 + W_ops_bra_1 + t_ts_bra_1 + t_ops_bra_1
+#terms.append( sqa.term( 1.0, [], Op1) )
+#Op2 = t_ts_ket_2 + t_ops_ket_2 + W_ts_ket_2 + W_ops_ket_2 + W_ts_bra_1 + W_ops_bra_1 + t_ts_bra_1 + t_ops_bra_1
+#terms.append( sqa.term( 1.0, [], Op2) )
+#Op3 = t_ts_ket_1 + t_ops_ket_1 + W_ts_ket_1 + W_ops_ket_1 + W_ts_bra_2 + W_ops_bra_2 + t_ts_bra_2 + t_ops_bra_2
+#terms.append( sqa.term( 1.0, [], Op3) )
 Op4 = t_ts_ket_2 + t_ops_ket_2 + W_ts_ket_2 + W_ops_ket_2 + W_ts_bra_2 + W_ops_bra_2 + t_ts_bra_2 + t_ops_bra_2
 terms.append( sqa.term( 1.0, [], Op4) )
 
@@ -59,9 +59,17 @@ for t in terms:
     Nterms += Nterm
 print ""
 
+print "re-obtain spin-free operator"
+Nterms2 = []
+for t in Nterms:
+    tmp = sqa.SpinFree( t )
+    Nterms2.append( tmp )
+    print tmp
+print ""
+
 print "HF Fermi expectation form"
 result = []
-for t in Nterms:
+for t in Nterms2:
     tmp = sqa.HFFermi( t )
     result.append( tmp )
     print tmp
@@ -79,8 +87,8 @@ for t in result:
     print t
 print ""
 
-sqa.combineTerms(result, maxThreads = 10)
-#sqa.combineTerms(result)
+#sqa.combineTerms(result, maxThreads = 5)
+sqa.combineTerms(result)
 print "combined terms"
 for t in result:
     print t
@@ -94,17 +102,17 @@ for t in result:
     print tmp
 print ""
 
-print "obtain weight factors"
-result3 = []
-for t in result2:
-    tmp = sqa.weight_factor( t )
-    result3.append( tmp )
-    print tmp
-print ""
+#print "obtain weight factors"
+#result3 = []
+#for t in result2:
+#    tmp = sqa.weight_factor( t )
+#    result3.append( tmp )
+#    print tmp
+#print ""
 
 print "non eq idx sort"
-result3 = sqa.sort_noeqidx_terms (result3)
-for t in result3:
+result = sqa.sort_noeqidx_terms ( result2 )
+for t in result:
     print t
 print ""
 

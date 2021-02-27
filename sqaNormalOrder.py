@@ -180,6 +180,14 @@ def normalOrder(inTerm):
         e2 = t.tensors[-1]
         o1 = e1.order
         o2 = e2.order
+        #lsh spin
+        s1 = e1.spin
+        s2 = e2.spin
+        spin1f = s1[0][:]
+        spin1e = s1[1][:]
+        spin2f = s2[0][:]
+        spin2e = s2[1][:]
+        shift  = max(max(spin1f),max(spin1e))
 
         # Loop over the number of contractions
         for nc in range(min(o1,o2)+1):
@@ -194,6 +202,10 @@ def normalOrder(inTerm):
             perms = makePermutations(nc)
           tups1 = makeTuples(nc, range(o1))
           tups2 = makeTuples(nc, range(o2))
+
+          #print('perms=',perms)
+          #print('tups1=',tups1)
+          #print('tups2=',tups2)
 
           # For each contraction, compute the resulting term
           for perm in perms:
@@ -234,16 +246,60 @@ def normalOrder(inTerm):
                     indexList[o1+count+newOrder] = e2.indices[i+o2]
                     count += 1
 
+                #lsh parity test
+                #print 'conPairs=', conPairs
+                parity_n = 0 
+                o1_l = [i for i in range(o1)]
+                o2_l = [i for i in range(o2)]
+                for i in range(len(conPairs[0])):
+                    p1 = conPairs[0][i]
+                    p2 = conPairs[1][i]
+                    parity_n += o1_l.index(p1)
+                    #print 'parity = ', p1, p2, o1_l, o2_l, parity_n
+                    parity_n += o2_l.index(p2) 
+                    #print 'parity = ', p1, p2, o1_l, o2_l, parity_n
+                    o1_l.remove(p1)
+                    o2_l.remove(p2)
+                parity  = (-1)**(parity_n) 
+                #parity *= 2**(len(conPairs[0])) 
+
+                #lsh spin test
+                spin_dict = {}
+                for i in range(len(conPairs[0])):
+                    p1 = conPairs[0][i]
+                    p2 = conPairs[1][i]
+                    spin_dict[spin2f[p2]] = spin1e[p1]
+
+                spin_new_f = spin1f[:] 
+                #print 'spin 1 = ', spin_new_f
+                for i in range(len(spin2f)):
+                    if i not in conPairs[1]:
+                        spin_new_f.append(spin2f[i]+shift+1) 
+                #print 'spin 2 = ', spin_new_f
+
+                spin_new_e = []
+                for i in range(len(spin1e)):
+                    if i not in conPairs[0]:
+                        spin_new_e.append(spin1e[i]) 
+
+                #print 'spin 3 = ', spin_new_e
+                for i in spin2e:
+                    if i not in spin_dict:
+                        spin_new_e.append(i+shift+1) 
+                    else:
+                        spin_new_e.append(spin_dict[i]) 
+                #print 'spin 4 = ', spin_new_e
+
                 # Ensure that all slots in the index list have been filled
                 for ind in indexList:
                   if ind is False:
                     raise RuntimeError, "There is at least one unassigned index in the new spin free operator."
-
+                #print 'spin= ', spin_new_f, spin_new_e
                 # Add the new excitation operator to the tensor list
-                tensorList.append(sfExOp(indexList))
+                tensorList.append(sfExOp(indexList, spin=[spin_new_f, spin_new_e]))
 
                 # Add the resulting term to this iteration's list of output terms
-                iter_output_terms.append(term(inTerm.numConstant, inTerm.constants, tensorList))
+                iter_output_terms.append(term(parity*inTerm.numConstant, inTerm.constants, tensorList))
 
       # Set this iteration's list of output terms as the next iteration's input terms
       iter_input_terms = iter_output_terms

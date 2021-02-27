@@ -56,7 +56,7 @@ class tensor:
 
   #------------------------------------------------------------------------------------------------
 
-  def __init__(self, name, indices = [], symmetries = []):
+  def __init__(self, name, indices = [], symmetries = [], spin = None):
 
     # Initialize data
     (self.permutations,self.factors) = (None,None)
@@ -354,7 +354,7 @@ class sfExOp(tensor):
 
   #------------------------------------------------------------------------------------------------
 
-  def __init__(self, indices):
+  def __init__(self, indices, spin=None):
     # Check that there are an even number of indices
     if len(indices)/2 != (len(indices)+1)/2:
       raise ValueError, "A spin free excitation operator (the sfExOp class) must have an " + \
@@ -365,6 +365,16 @@ class sfExOp(tensor):
 
     # Initialize name
     self.name = "E%i" %self.order
+
+    # Initialize spin: lsh
+    if spin is None:
+        tmp1 = [i for i in range(self.order)]
+        #tmp2 = [self.order-i-1 for i in range(self.order)]
+        self.spin = [tmp1, tmp1]
+        #print 'default', self.spin  
+    else:
+        self.spin = spin 
+        #print 'value', self.spin  
 
     # Initialize indices
     self.indices = []
@@ -430,7 +440,7 @@ class sfExOp(tensor):
   #------------------------------------------------------------------------------------------------
 
   def copy(self):
-    return sfExOp(self.indices)
+    return sfExOp(self.indices, spin=self.spin)
 
   #------------------------------------------------------------------------------------------------
 
