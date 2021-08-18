@@ -26,6 +26,7 @@ class sqaOptions:
     self.beta_type = ('beta',)
     self.core_type = ('core',)
     self.active_type = ('active',)
+    self.active_type2 = ('active2',)
     self.virtual_type = ('virtual',)
 
 # Create an object of the options class

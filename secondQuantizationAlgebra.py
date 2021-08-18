@@ -45,8 +45,9 @@ from sqaTerm import  \
   term,              \
   termChop
 
-from sqaNormalOrder import \
-  normalOrder,             \
+from sqaNormalOrder import    \
+  normalOrder,                \
+  normalOrder_maxcontraction, \
   contractCoreOps_sf
 
 from sqaCommutator import \
@@ -101,7 +102,11 @@ from sqaConvert import \
 
 #lsh
 from sqaSLee import   \
+  vacuumFermi,        \
+  rmOverlap,          \
   HFFermi,            \
+  Pauli,              \
+  rmTags,             \
   idxname,            \
   weight_factor,      \
   sort_noeqidx_terms, \

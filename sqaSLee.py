@@ -26,6 +26,449 @@ from sqaOptions import options
 #--------------------------------------------------------------------------------------------------
 #--------------------------------------------------------------------------------------------------
 
+def vacuumFermi(inTerm):
+  ""
+
+  # check that inTerm is a term
+  if not isinstance(inTerm, term):
+    raise TypeError, "inTerm must be of class term"
+
+  # determine what types of operators the term contains
+  has_creDesOps = False
+  has_sfExOps = False
+  for t in inTerm.tensors:
+    if isinstance(t, creOp) or isinstance(t, desOp):
+      has_creDesOps = True
+    elif isinstance(t, sfExOp):
+      has_sfExOps = True
+
+  # If not spin free excitation operators,
+  # raise an error
+  if has_sfExOps:
+    raise RuntimeError, "Present version of vacuumFermi can treat only CreDesOps"
+
+  # if the term is already normal ordered, return it unchanged
+  elif not inTerm.isNormalOrdered():
+    raise RuntimeError, "vacuumFermi requires normal ordered operators"
+
+  # Normal ordering for sfExOps
+  elif has_creDesOps:
+
+    const = inTerm.numConstant
+    outTerm = term(0.0, [], inTerm.tensors)
+
+  else:
+    outTerm = inTerm
+
+  return outTerm
+
+def rmOverlap(inTerm):
+  ""
+
+  # check that inTerm is a term
+  if not isinstance(inTerm, term):
+    raise TypeError, "inTerm must be of class term"
+
+  # determine what types of operators the term contains
+  has_kronecker = False
+  for t in inTerm.tensors:
+    if isinstance(t, kroneckerDelta):
+      has_kronecker = True 
+
+  # Normal ordering for sfExOps
+  if has_kronecker :
+    outTerm = term(0.0, [], inTerm.tensors)
+  else:
+    outTerm = inTerm
+
+  return outTerm
+
+def Pauli(inTerm):
+  ""
+
+  # check that inTerm is a term
+  if not isinstance(inTerm, term):
+    raise TypeError, "inTerm must be of class term"
+
+  # determine what types of operators the term contains
+  has_creDesOps = False
+  has_sfExOps   = False
+  has_kronecker = False
+  for t in inTerm.tensors:
+    if isinstance(t, creOp) or isinstance(t, desOp):
+      has_creDesOps = True
+    elif isinstance(t, sfExOp):
+      has_sfExOps   = True
+    elif isinstance(t, kroneckerDelta):
+      has_kronecker = True 
+
+
+#  has_XG_XC2V = False
+#  for t in inTerm.tensors:
+#    if t.name == 'X_G' or t.name == 'X*_G' or t.name == 'X_C2V1' or t.name == 'X*_C2V1' or  t.name == 'X_C1V1' or t.name == 'X*_C1V1' or t.name == 'X_C2V2' or t.name == 'X*_C2V2':
+#      has_XG_XC2V = True 
+
+#  has_t2Wk = False
+#  for t in inTerm.tensors:
+#    if t.name == 't2Wk':
+#      has_t2Wk = True
+
+  # If not spin free excitation operators,
+  # raise an error
+  #if has_sfExOps or has_creDesOps or has_kronecker:
+  #  raise RuntimeError, "Present version of Pauli only after contract"
+
+  # if the term is already normal ordered, return it unchanged
+  if not inTerm.isNormalOrdered():
+    raise RuntimeError, "HFFermi requires normal ordered operators"
+
+  # Make separate lists of the spin free excitation operators and other tensors
+  X_list  = []
+  for t in inTerm.tensors:
+    if t.name[0] == 'X':
+      X_list.append(t.copy())
+
+  const = inTerm.numConstant
+
+  for x in X_list:
+      if x.indices[0].name == x.indices[2].name: const = 0.0 
+      if x.indices[1].name == x.indices[3].name: const = 0.0 
+
+  outTerm = term(const, [], inTerm.tensors)
+
+#  # Normal ordering for sfExOps
+#  elif has_t2Wk:
+#
+#    # Make separate lists of the spin free excitation operators and other tensors
+#    sfExOp_list = []
+#    kroneckerDelta_list  = []
+#    t2Wk_list  = []
+#    t2Wb_list  = []
+#    for t in inTerm.tensors:
+#      if isinstance(t, sfExOp):
+#        sfExOp_list.append(t.copy())
+#      elif isinstance(t, kroneckerDelta):
+#        kroneckerDelta_list.append(t.copy())
+#      elif t.name == 't2Wk':
+#        t2Wk_list.append(t.copy())
+#      elif t.name == 't2Wb':
+#        t2Wb_list.append(t.copy())
+#      else:
+#        raise RuntimeError, "terms should be sfExOp, kroneckerDelta, t2Wk, or t2Wb"
+#
+#    # Initialize n, the number of remaining spin free excitation operators
+#    n = len(sfExOp_list)
+#    if n != 1:
+#        raise RuntimeError, "terms should have single sfExOp"
+#
+#    has_active = False
+#    for idx in sfExOp_list[0].indices: 
+#        for typ in idx.indType:
+#            if typ == options.active_type:
+#                has_active = True 
+#
+#    if not has_active:
+#        const = inTerm.numConstant
+#        order = sfExOp_list[0].order
+#        for idx in sfExOp_list[0].indices: 
+#            for typ in idx.indType:
+#                #print typ[0]
+#                if typ == options.virtual_type:
+#                    const = 0.0 
+#    
+#        deltaFuncs = []
+#        sfExOp_tmp= sfExOp_list[0]
+#        order = sfExOp_tmp.order
+#        if const == inTerm.numConstant:
+#            a0_flag = False 
+#            a2_flag = False
+#            a1_flag = False
+#    
+#            # a0 
+#            for d in kroneckerDelta_list:
+#                if d.indices[0].name == "a0":
+#                    a_delta = d.indices[1].name
+#                elif d.indices[1].name == "a0":
+#                    a_delta = d.indices[0].name
+#    
+#            for wb in t2Wb_list:
+#                for i in range(3):
+#                    if wb.indices[i+3].name == a_delta:
+#                        i_t2Wb = wb.indices[i].name
+#    
+#            E_spin = sfExOp_tmp.spin
+#            for i in range(order):
+#                if sfExOp_tmp.indices[i].name   == "i0":
+#                    spin_1 = E_spin[0][i]
+#                if sfExOp_tmp.indices[i+3].name == i_t2Wb:
+#                    spin_2 = E_spin[1][i]
+#    
+#            if spin_1 == spin_2: a0_flag = True
+#    
+#            # a2 
+#            for d in kroneckerDelta_list:
+#                if d.indices[0].name == "a2":
+#                    a_delta = d.indices[1].name
+#                elif d.indices[1].name == "a2":
+#                    a_delta = d.indices[0].name
+#    
+#            for wb in t2Wb_list:
+#                for i in range(3):
+#                    if wb.indices[i+3].name == a_delta:
+#                        i_t2Wb = wb.indices[i].name
+#    
+#            E_spin = sfExOp_tmp.spin
+#            for i in range(order):
+#                if sfExOp_tmp.indices[i].name   == "i2":
+#                    spin_1 = E_spin[0][i]
+#                if sfExOp_tmp.indices[i+3].name == i_t2Wb:
+#                    spin_2 = E_spin[1][i]
+#    
+#            if spin_1 == spin_2: a2_flag = True
+#    
+#            # a1 
+#            for d in kroneckerDelta_list:
+#                if d.indices[0].name == "a1":
+#                    a_delta = d.indices[1].name
+#                elif d.indices[1].name == "a1":
+#                    a_delta = d.indices[0].name
+#    
+#            for wb in t2Wb_list:
+#                for i in range(3):
+#                    if wb.indices[i+3].name == a_delta:
+#                        i_t2Wb = wb.indices[i].name
+#    
+#            E_spin = sfExOp_tmp.spin
+#            for i in range(order):
+#                if sfExOp_tmp.indices[i].name   == "i1":
+#                    spin_1 = E_spin[0][i]
+#                if sfExOp_tmp.indices[i+3].name == i_t2Wb:
+#                    spin_2 = E_spin[1][i]
+#    
+#            if spin_1 == spin_2: a1_flag = True
+#    
+#            if a1_flag is False:
+#                if a0_flag is True or a2_flag is True: const *= 2
+#            else:
+#                if a0_flag is True and a2_flag is True: const *= 4 
+#                if a0_flag is False and a2_flag is False: const *= 2 
+#    
+#    
+#            for i in range(order):
+#                index1 = sfExOp_list[0].indices[i]
+#                index2 = sfExOp_list[0].indices[i+order]
+#                deltaFuncs.append(kroneckerDelta([index1,index2])) 
+#            #outTerm = term(const, inTerm.constants, kroneckerDelta_list + deltaFuncs + t_list + W_list)
+#            outTerm = term(const, inTerm.constants, kroneckerDelta_list + deltaFuncs + t2Wk_list + t2Wb_list)
+#    
+#        else:
+#            outTerm = term(const, inTerm.constants, deltaFuncs + t2Wk_list + t2Wb_list + sfExOp_list)
+#            #outTerm = term(const, inTerm.constants, deltaFuncs + [t_list[0]] + W_list + [t_list[1]] + sfExOp_list)
+#            #outTerm = term(const, inTerm.constants, other_list + sfExOp_list)
+#
+#    elif has_active:
+#
+#        const = inTerm.numConstant
+#        order = sfExOp_list[0].order
+#        for idx in sfExOp_list[0].indices: 
+#            for typ in idx.indType:
+#                #print typ[0]
+#                if typ == options.virtual_type:
+#                    const = 0.0 
+#
+#        deltaFuncs = []
+#        sfExOp_tmp= sfExOp_list[0].copy()
+#        order_tmp = sfExOp_list[0].order
+#        E_spin = sfExOp_list[0].spin
+#        E_index= sfExOp_list[0].indices
+#        if const == inTerm.numConstant:
+#            Dup = True 
+#            while Dup:
+#                Dup = False 
+#                for i in range(order_tmp): 
+#                    idxi = sfExOp_tmp.indices[order_tmp-i-1] 
+#                    name_idxi = idxi.name
+#                    type_idxi = idxi.indType
+#                    for j in range(order_tmp): 
+#                        idxj = sfExOp_tmp.indices[j+order_tmp] 
+#                        name_idxj = idxj.name
+#                        type_idxj = idxj.indType
+#                        if type_idxi[0] == options.core_type and type_idxj[0] == options.core_type:
+#                            Dup = True
+#                            deltaFuncs.append(kroneckerDelta([idxi,idxj]))
+#                            indices_tmp = []
+#                            spin_tmp = [[],[]]
+#                            for k in range(len(sfExOp_tmp.indices)): 
+#                                if k != order_tmp-i-1:
+#                                    if k != j+order_tmp:
+#                                        indices_tmp.append(sfExOp_tmp.indices[k].copy())
+#                                        if k <  order_tmp: spin_tmp[0].append(sfExOp_tmp.spin[0][k])
+#                                        if k >= order_tmp: spin_tmp[1].append(sfExOp_tmp.spin[1][k-order_tmp])
+#                            sfExOp_tmp = sfExOp(indices_tmp, spin=spin_tmp) 
+#                            const *= (-1)**(j+order_tmp-(order_tmp-i-1)+1) 
+#                            order_tmp = sfExOp_tmp.order
+#                            #print i, j, name_idxi, name_idxj, order_tmp, sfExOp_tmp, sfExOp_tmp.spin
+#                            break
+#                    if Dup: break
+#
+#            # apply active spin
+#            print sfExOp_tmp.spin
+#            print E_spin
+#            for i in range(len(sfExOp_tmp.spin[0])):
+#                [sfExOp_tmp.spin[1][i] if x==sfExOp_tmp.spin[0][i] else x for x in E_spin[0]] 
+#                [sfExOp_tmp.spin[1][i] if x==sfExOp_tmp.spin[0][i] else x for x in E_spin[1]] 
+#            print E_spin
+#
+#            sfExOp_core_tmp= sfExOp_list[0].copy()
+#            order_tmp      = sfExOp_list[0].order
+#            indices_tmp    = []
+#            spin_tmp       = [[],[]]
+#            for k, idx in enumerate(sfExOp_core_tmp.indices):
+#                if idx.indType[0] == options.core_type:
+#                    indices_tmp.append(idx) 
+#                    if k <  order_tmp: spin_tmp[0].append(sfExOp_core_tmp.spin[0][k])
+#                    if k >= order_tmp: spin_tmp[1].append(sfExOp_core_tmp.spin[1][k-order_tmp])
+#
+#            sfExOp_core_tmp = sfExOp(indices_tmp, spin=spin_tmp) 
+#            order_tmp = sfExOp_core_tmp.order
+#
+#            # scaling    
+#            a0_flag = False 
+#            a2_flag = False
+#            a1_flag = False
+#    
+#            # a0 
+#            if t2Wk_list[0].indices[0].indType[0] == options.core_type:
+#                for d in kroneckerDelta_list:
+#                    if d.indices[0].name == "a0":
+#                        a_delta = d.indices[1].name
+#                    elif d.indices[1].name == "a0":
+#                        a_delta = d.indices[0].name
+#        
+#                for wb in t2Wb_list:
+#                    for i in range(3):
+#                        if wb.indices[i+3].name == a_delta:
+#                            i_t2Wb = wb.indices[i].name
+#        
+#                for d in deltaFuncs:
+#                    if sfExOp_core_tmp.indices[i].name   == "i0":
+#                        spin_1 = E_spin[0][i]
+#    
+#                for i in range(order_tmp):
+#                    if sfExOp_core_tmp.indices[i].name   == "i0":
+#                        spin_1 = E_spin[0][i]
+#                    if sfExOp_core_tmp.indices[i+3].name == i_t2Wb:
+#                        spin_2 = E_spin[1][i]
+#        
+#                if spin_1 == spin_2: a0_flag = True
+#    
+#            # a2 
+#            if t2Wk_list[0].indices[2].indType[0] == options.core_type:
+#                for d in kroneckerDelta_list:
+#                    if d.indices[0].name == "a2":
+#                        a_delta = d.indices[1].name
+#                    elif d.indices[1].name == "a2":
+#                        a_delta = d.indices[0].name
+#        
+#                for wb in t2Wb_list:
+#                    for i in range(3):
+#                        if wb.indices[i+3].name == a_delta:
+#                            i_t2Wb = wb.indices[i].name
+#        
+#                E_spin = sfExOp_core_tmp.spin
+#                for i in range(order_tmp):
+#                    if sfExOp_core_tmp.indices[i].name   == "i2":
+#                        spin_1 = E_spin[0][i]
+#                    if sfExOp_core_tmp.indices[i+3].name == i_t2Wb:
+#                        spin_2 = E_spin[1][i]
+#        
+#                if spin_1 == spin_2: a2_flag = True
+#    
+#            # a1 
+#            if t2Wk_list[0].indices[1].indType[0] == options.core_type:
+#                for d in kroneckerDelta_list:
+#                    if d.indices[0].name == "a1":
+#                        a_delta = d.indices[1].name
+#                    elif d.indices[1].name == "a1":
+#                        a_delta = d.indices[0].name
+#        
+#                for wb in t2Wb_list:
+#                    for i in range(3):
+#                        if wb.indices[i+3].name == a_delta:
+#                            i_t2Wb = wb.indices[i].name
+#        
+#                E_spin = sfExOp_core_tmp.spin
+#                for i in range(order_tmp):
+#                    if sfExOp_core_tmp.indices[i].name   == "i1":
+#                        spin_1 = E_spin[0][i]
+#                    if sfExOp_core_tmp.indices[i+3].name == i_t2Wb:
+#                        spin_2 = E_spin[1][i]
+#        
+#                if spin_1 == spin_2: a1_flag = True
+#    
+#            if a1_flag is False:
+#                if a0_flag is True  or  a2_flag is True:  const *= 2
+#            else:
+#                if a0_flag is True  and a2_flag is True:  const *= 4 
+#                if a0_flag is False and a2_flag is False: const *= 2 
+#    
+##    
+##            for i in range(order_tmp):
+##                index1 = sfExOp_list[0].indices[i]
+##                index2 = sfExOp_list[0].indices[i+order_tmp]
+##                deltaFuncs.append(kroneckerDelta([index1,index2])) 
+#            #outTerm = term(const, inTerm.constants, kroneckerDelta_list + deltaFuncs + t_list + W_list)
+#            outTerm = term(const, inTerm.constants, kroneckerDelta_list + deltaFuncs + t2Wk_list + t2Wb_list + [sfExOp_tmp])
+#    
+#        else:
+#            outTerm = term(const, inTerm.constants, deltaFuncs + t2Wk_list + t2Wb_list + sfExOp_list)
+#            #outTerm = term(const, inTerm.constants, deltaFuncs + [t_list[0]] + W_list + [t_list[1]] + sfExOp_list)
+#            #outTerm = term(const, inTerm.constants, other_list + sfExOp_list)
+
+#  else:
+#    raise RuntimeError, "Pauli failed to choose what to do."
+
+  return outTerm
+
+def rmTags(inTerm):
+  ""
+
+  # check that inTerm is a term
+  if not isinstance(inTerm, term):
+    raise TypeError, "inTerm must be of class term"
+
+  # determine what types of operators the term contains
+  has_creDesOps = False
+  has_sfExOps   = False
+  has_kronecker = False
+  for t in inTerm.tensors:
+    if isinstance(t, creOp) or isinstance(t, desOp):
+      has_creDesOps = True
+    elif isinstance(t, sfExOp):
+      has_sfExOps   = True
+    elif isinstance(t, kroneckerDelta):
+      has_kronecker = True 
+
+#  if has_sfExOps or has_creDesOps or has_kronecker:
+#    raise RuntimeError, "Present version of Pauli only after contract"
+  if not inTerm.isNormalOrdered():
+    raise RuntimeError, "HFFermi requires normal ordered operators"
+
+  new_tensors = []  
+  for t in inTerm.tensors:
+    new_indices = []
+    for ind in t.indices:
+        indn = index(ind.name, [], ind.isSummed)
+        new_indices.append(indn)
+
+    tn = tensor(t.name, new_indices, t.symmetries) 
+    new_tensors.append(tn)
+
+  outTerm = term(inTerm.numConstant, [], new_tensors)
+
+  return outTerm
+
+
 def HFFermi(inTerm):
   ""
 
@@ -286,106 +729,269 @@ def HFFermi(inTerm):
     if n != 1:
         raise RuntimeError, "terms should have single sfExOp"
 
-    const = inTerm.numConstant
-    order = sfExOp_list[0].order
+    has_active = False
     for idx in sfExOp_list[0].indices: 
         for typ in idx.indType:
-            #print typ[0]
-    #TODO: when a,b exist in E, delta term should be remained
-    #TODO: this version just ignore the term 
-            if typ == options.virtual_type:
-                const = 0.0 
+            if typ == options.active_type:
+                has_active = True 
 
-    deltaFuncs = []
-    sfExOp_tmp= sfExOp_list[0]
-    order = sfExOp_tmp.order
-    if const == inTerm.numConstant:
-        a0_flag = False 
-        a2_flag = False
-        a1_flag = False
-
-        # a0 
-        for d in kroneckerDelta_list:
-            if d.indices[0].name == "a0":
-                a_delta = d.indices[1].name
-            elif d.indices[1].name == "a0":
-                a_delta = d.indices[0].name
-
-        for wb in t2Wb_list:
-            for i in range(3):
-                if wb.indices[i+3].name == a_delta:
-                    i_t2Wb = wb.indices[i].name
-
-        E_spin = sfExOp_tmp.spin
-        for i in range(order):
-            if sfExOp_tmp.indices[i].name   == "i0":
-                spin_1 = E_spin[0][i]
-            if sfExOp_tmp.indices[i+3].name == i_t2Wb:
-                spin_2 = E_spin[1][i]
-
-        if spin_1 == spin_2: a0_flag = True
-
-        # a2 
-        for d in kroneckerDelta_list:
-            if d.indices[0].name == "a2":
-                a_delta = d.indices[1].name
-            elif d.indices[1].name == "a2":
-                a_delta = d.indices[0].name
-
-        for wb in t2Wb_list:
-            for i in range(3):
-                if wb.indices[i+3].name == a_delta:
-                    i_t2Wb = wb.indices[i].name
-
-        E_spin = sfExOp_tmp.spin
-        for i in range(order):
-            if sfExOp_tmp.indices[i].name   == "i2":
-                spin_1 = E_spin[0][i]
-            if sfExOp_tmp.indices[i+3].name == i_t2Wb:
-                spin_2 = E_spin[1][i]
-
-        if spin_1 == spin_2: a2_flag = True
-
-        # a1 
-        for d in kroneckerDelta_list:
-            if d.indices[0].name == "a1":
-                a_delta = d.indices[1].name
-            elif d.indices[1].name == "a1":
-                a_delta = d.indices[0].name
-
-        for wb in t2Wb_list:
-            for i in range(3):
-                if wb.indices[i+3].name == a_delta:
-                    i_t2Wb = wb.indices[i].name
-
-        E_spin = sfExOp_tmp.spin
-        for i in range(order):
-            if sfExOp_tmp.indices[i].name   == "i1":
-                spin_1 = E_spin[0][i]
-            if sfExOp_tmp.indices[i+3].name == i_t2Wb:
-                spin_2 = E_spin[1][i]
-
-        if spin_1 == spin_2: a1_flag = True
-
-        if a1_flag is False:
-            if a0_flag is True or a2_flag is True: const *= 2
+    if not has_active:
+        const = inTerm.numConstant
+        order = sfExOp_list[0].order
+        for idx in sfExOp_list[0].indices: 
+            for typ in idx.indType:
+                #print typ[0]
+                if typ == options.virtual_type:
+                    const = 0.0 
+    
+        deltaFuncs = []
+        sfExOp_tmp= sfExOp_list[0]
+        order = sfExOp_tmp.order
+        if const == inTerm.numConstant:
+            a0_flag = False 
+            a2_flag = False
+            a1_flag = False
+    
+            # a0 
+            for d in kroneckerDelta_list:
+                if d.indices[0].name == "a0":
+                    a_delta = d.indices[1].name
+                elif d.indices[1].name == "a0":
+                    a_delta = d.indices[0].name
+    
+            for wb in t2Wb_list:
+                for i in range(3):
+                    if wb.indices[i+3].name == a_delta:
+                        i_t2Wb = wb.indices[i].name
+    
+            E_spin = sfExOp_tmp.spin
+            for i in range(order):
+                if sfExOp_tmp.indices[i].name   == "i0":
+                    spin_1 = E_spin[0][i]
+                if sfExOp_tmp.indices[i+3].name == i_t2Wb:
+                    spin_2 = E_spin[1][i]
+    
+            if spin_1 == spin_2: a0_flag = True
+    
+            # a2 
+            for d in kroneckerDelta_list:
+                if d.indices[0].name == "a2":
+                    a_delta = d.indices[1].name
+                elif d.indices[1].name == "a2":
+                    a_delta = d.indices[0].name
+    
+            for wb in t2Wb_list:
+                for i in range(3):
+                    if wb.indices[i+3].name == a_delta:
+                        i_t2Wb = wb.indices[i].name
+    
+            E_spin = sfExOp_tmp.spin
+            for i in range(order):
+                if sfExOp_tmp.indices[i].name   == "i2":
+                    spin_1 = E_spin[0][i]
+                if sfExOp_tmp.indices[i+3].name == i_t2Wb:
+                    spin_2 = E_spin[1][i]
+    
+            if spin_1 == spin_2: a2_flag = True
+    
+            # a1 
+            for d in kroneckerDelta_list:
+                if d.indices[0].name == "a1":
+                    a_delta = d.indices[1].name
+                elif d.indices[1].name == "a1":
+                    a_delta = d.indices[0].name
+    
+            for wb in t2Wb_list:
+                for i in range(3):
+                    if wb.indices[i+3].name == a_delta:
+                        i_t2Wb = wb.indices[i].name
+    
+            E_spin = sfExOp_tmp.spin
+            for i in range(order):
+                if sfExOp_tmp.indices[i].name   == "i1":
+                    spin_1 = E_spin[0][i]
+                if sfExOp_tmp.indices[i+3].name == i_t2Wb:
+                    spin_2 = E_spin[1][i]
+    
+            if spin_1 == spin_2: a1_flag = True
+    
+            if a1_flag is False:
+                if a0_flag is True or a2_flag is True: const *= 2
+            else:
+                if a0_flag is True and a2_flag is True: const *= 4 
+                if a0_flag is False and a2_flag is False: const *= 2 
+    
+    
+            for i in range(order):
+                index1 = sfExOp_list[0].indices[i]
+                index2 = sfExOp_list[0].indices[i+order]
+                deltaFuncs.append(kroneckerDelta([index1,index2])) 
+            #outTerm = term(const, inTerm.constants, kroneckerDelta_list + deltaFuncs + t_list + W_list)
+            outTerm = term(const, inTerm.constants, kroneckerDelta_list + deltaFuncs + t2Wk_list + t2Wb_list)
+    
         else:
-            if a0_flag is True and a2_flag is True: const *= 4 
-            if a0_flag is False and a2_flag is False: const *= 2 
+            outTerm = term(const, inTerm.constants, deltaFuncs + t2Wk_list + t2Wb_list + sfExOp_list)
+            #outTerm = term(const, inTerm.constants, deltaFuncs + [t_list[0]] + W_list + [t_list[1]] + sfExOp_list)
+            #outTerm = term(const, inTerm.constants, other_list + sfExOp_list)
 
+    elif has_active:
 
-        for i in range(order):
-            index1 = sfExOp_list[0].indices[i]
-            index2 = sfExOp_list[0].indices[i+order]
-            deltaFuncs.append(kroneckerDelta([index1,index2])) 
-        #outTerm = term(const, inTerm.constants, kroneckerDelta_list + deltaFuncs + t_list + W_list)
-        outTerm = term(const, inTerm.constants, kroneckerDelta_list + deltaFuncs + t2Wk_list + t2Wb_list)
+        const = inTerm.numConstant
+        order = sfExOp_list[0].order
+        for idx in sfExOp_list[0].indices: 
+            for typ in idx.indType:
+                #print typ[0]
+                if typ == options.virtual_type:
+                    const = 0.0 
 
-    else:
-        outTerm = term(const, inTerm.constants, deltaFuncs + t2Wk_list + t2Wb_list + sfExOp_list)
-        #outTerm = term(const, inTerm.constants, deltaFuncs + [t_list[0]] + W_list + [t_list[1]] + sfExOp_list)
-        #outTerm = term(const, inTerm.constants, other_list + sfExOp_list)
+        deltaFuncs = []
+        sfExOp_tmp= sfExOp_list[0].copy()
+        order_tmp = sfExOp_list[0].order
+        E_spin = sfExOp_list[0].spin
+        E_index= sfExOp_list[0].indices
+        if const == inTerm.numConstant:
+            Dup = True 
+            while Dup:
+                Dup = False 
+                for i in range(order_tmp): 
+                    idxi = sfExOp_tmp.indices[order_tmp-i-1] 
+                    name_idxi = idxi.name
+                    type_idxi = idxi.indType
+                    for j in range(order_tmp): 
+                        idxj = sfExOp_tmp.indices[j+order_tmp] 
+                        name_idxj = idxj.name
+                        type_idxj = idxj.indType
+                        if type_idxi[0] == options.core_type and type_idxj[0] == options.core_type:
+                            Dup = True
+                            deltaFuncs.append(kroneckerDelta([idxi,idxj]))
+                            indices_tmp = []
+                            spin_tmp = [[],[]]
+                            for k in range(len(sfExOp_tmp.indices)): 
+                                if k != order_tmp-i-1:
+                                    if k != j+order_tmp:
+                                        indices_tmp.append(sfExOp_tmp.indices[k].copy())
+                                        if k <  order_tmp: spin_tmp[0].append(sfExOp_tmp.spin[0][k])
+                                        if k >= order_tmp: spin_tmp[1].append(sfExOp_tmp.spin[1][k-order_tmp])
+                            sfExOp_tmp = sfExOp(indices_tmp, spin=spin_tmp) 
+                            const *= (-1)**(j+order_tmp-(order_tmp-i-1)+1) 
+                            order_tmp = sfExOp_tmp.order
+                            #print i, j, name_idxi, name_idxj, order_tmp, sfExOp_tmp, sfExOp_tmp.spin
+                            break
+                    if Dup: break
 
+            # apply active spin
+            print sfExOp_tmp.spin
+            print E_spin
+            for i in range(len(sfExOp_tmp.spin[0])):
+                [sfExOp_tmp.spin[1][i] if x==sfExOp_tmp.spin[0][i] else x for x in E_spin[0]] 
+                [sfExOp_tmp.spin[1][i] if x==sfExOp_tmp.spin[0][i] else x for x in E_spin[1]] 
+            print E_spin
+
+            sfExOp_core_tmp= sfExOp_list[0].copy()
+            order_tmp      = sfExOp_list[0].order
+            indices_tmp    = []
+            spin_tmp       = [[],[]]
+            for k, idx in enumerate(sfExOp_core_tmp.indices):
+                if idx.indType[0] == options.core_type:
+                    indices_tmp.append(idx) 
+                    if k <  order_tmp: spin_tmp[0].append(sfExOp_core_tmp.spin[0][k])
+                    if k >= order_tmp: spin_tmp[1].append(sfExOp_core_tmp.spin[1][k-order_tmp])
+
+            sfExOp_core_tmp = sfExOp(indices_tmp, spin=spin_tmp) 
+            order_tmp = sfExOp_core_tmp.order
+
+            # scaling    
+            a0_flag = False 
+            a2_flag = False
+            a1_flag = False
+    
+            # a0 
+            if t2Wk_list[0].indices[0].indType[0] == options.core_type:
+                for d in kroneckerDelta_list:
+                    if d.indices[0].name == "a0":
+                        a_delta = d.indices[1].name
+                    elif d.indices[1].name == "a0":
+                        a_delta = d.indices[0].name
+        
+                for wb in t2Wb_list:
+                    for i in range(3):
+                        if wb.indices[i+3].name == a_delta:
+                            i_t2Wb = wb.indices[i].name
+        
+                for d in deltaFuncs:
+                    if sfExOp_core_tmp.indices[i].name   == "i0":
+                        spin_1 = E_spin[0][i]
+    
+                for i in range(order_tmp):
+                    if sfExOp_core_tmp.indices[i].name   == "i0":
+                        spin_1 = E_spin[0][i]
+                    if sfExOp_core_tmp.indices[i+3].name == i_t2Wb:
+                        spin_2 = E_spin[1][i]
+        
+                if spin_1 == spin_2: a0_flag = True
+    
+            # a2 
+            if t2Wk_list[0].indices[2].indType[0] == options.core_type:
+                for d in kroneckerDelta_list:
+                    if d.indices[0].name == "a2":
+                        a_delta = d.indices[1].name
+                    elif d.indices[1].name == "a2":
+                        a_delta = d.indices[0].name
+        
+                for wb in t2Wb_list:
+                    for i in range(3):
+                        if wb.indices[i+3].name == a_delta:
+                            i_t2Wb = wb.indices[i].name
+        
+                E_spin = sfExOp_core_tmp.spin
+                for i in range(order_tmp):
+                    if sfExOp_core_tmp.indices[i].name   == "i2":
+                        spin_1 = E_spin[0][i]
+                    if sfExOp_core_tmp.indices[i+3].name == i_t2Wb:
+                        spin_2 = E_spin[1][i]
+        
+                if spin_1 == spin_2: a2_flag = True
+    
+            # a1 
+            if t2Wk_list[0].indices[1].indType[0] == options.core_type:
+                for d in kroneckerDelta_list:
+                    if d.indices[0].name == "a1":
+                        a_delta = d.indices[1].name
+                    elif d.indices[1].name == "a1":
+                        a_delta = d.indices[0].name
+        
+                for wb in t2Wb_list:
+                    for i in range(3):
+                        if wb.indices[i+3].name == a_delta:
+                            i_t2Wb = wb.indices[i].name
+        
+                E_spin = sfExOp_core_tmp.spin
+                for i in range(order_tmp):
+                    if sfExOp_core_tmp.indices[i].name   == "i1":
+                        spin_1 = E_spin[0][i]
+                    if sfExOp_core_tmp.indices[i+3].name == i_t2Wb:
+                        spin_2 = E_spin[1][i]
+        
+                if spin_1 == spin_2: a1_flag = True
+    
+            if a1_flag is False:
+                if a0_flag is True  or  a2_flag is True:  const *= 2
+            else:
+                if a0_flag is True  and a2_flag is True:  const *= 4 
+                if a0_flag is False and a2_flag is False: const *= 2 
+    
+#    
+#            for i in range(order_tmp):
+#                index1 = sfExOp_list[0].indices[i]
+#                index2 = sfExOp_list[0].indices[i+order_tmp]
+#                deltaFuncs.append(kroneckerDelta([index1,index2])) 
+            #outTerm = term(const, inTerm.constants, kroneckerDelta_list + deltaFuncs + t_list + W_list)
+            outTerm = term(const, inTerm.constants, kroneckerDelta_list + deltaFuncs + t2Wk_list + t2Wb_list + [sfExOp_tmp])
+    
+        else:
+            outTerm = term(const, inTerm.constants, deltaFuncs + t2Wk_list + t2Wb_list + sfExOp_list)
+            #outTerm = term(const, inTerm.constants, deltaFuncs + [t_list[0]] + W_list + [t_list[1]] + sfExOp_list)
+            #outTerm = term(const, inTerm.constants, other_list + sfExOp_list)
 
   else:
     raise RuntimeError, "HFFermi failed to choose what to do."
@@ -829,7 +1435,6 @@ def SpinFree(inTerm):
     sfExOp_tmp = sfExOp_list[0]
     const_tmp = inTerm.numConstant
     order_tmp = sfExOp_list[0].order
-    spin_tmp  = sfExOp_list[0].spin
     Dup = True 
     while Dup:
         Dup = False 
@@ -842,10 +1447,13 @@ def SpinFree(inTerm):
                 if name_idxi == name_idxj:
                     Dup = True
                     indices_tmp = []
+                    spin_tmp = [[],[]]
                     for k in range(len(sfExOp_tmp.indices)): 
                         if k != order_tmp-i-1:
                             if k != j+order_tmp:
                                 indices_tmp.append(sfExOp_tmp.indices[k].copy())
+                                if k <  order_tmp: spin_tmp[0].append(sfExOp_tmp.spin[0][k])
+                                if k >= order_tmp: spin_tmp[1].append(sfExOp_tmp.spin[1][k])
                     sfExOp_tmp = sfExOp(indices_tmp, spin=spin_tmp) 
                     const_tmp *= (-1)**(j+order_tmp-(order_tmp-i-1)+1) 
                     order_tmp = sfExOp_tmp.order

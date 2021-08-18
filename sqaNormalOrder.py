@@ -22,7 +22,6 @@ from sqaIndex import index
 from sqaMisc import makeTuples, allDifferent, makePermutations, get_num_perms
 from sqaOptions import options
 
-
 #--------------------------------------------------------------------------------------------------
 #--------------------------------------------------------------------------------------------------
 
@@ -309,6 +308,133 @@ def normalOrder(inTerm):
       
     # Set the return value as the final iteration's output terms
     outTerms = iter_output_terms
+
+  else:
+    raise RuntimeError, "Normal ordering function failed to choose what to do."
+
+#  print "Terms after normal ordering:"
+#  for t in outTerms:
+#    print t
+
+  return outTerms
+
+def normalOrder_maxcontraction(inTerm):
+  "Returns a list of terms resulting from normal ordering the operators in inTerm."
+
+#  if options.verbose:
+#    print "converting to normal order:  %s" %(str(inTerm))
+
+  # check that inTerm is a term
+  if not isinstance(inTerm, term):
+    raise TypeError, "inTerm must be of class term"
+
+  # determine what types of operators the term contains
+  has_creDesOps = False
+  has_sfExOps = False
+  for t in inTerm.tensors:
+    if isinstance(t, creOp) or isinstance(t, desOp):
+      has_creDesOps = True
+    elif isinstance(t, sfExOp):
+      has_sfExOps = True
+
+  # If term has both creation/destruction operators and spin free excitation operators,
+  # raise an error
+  if has_sfExOps:
+    raise RuntimeError, "Normal ordering not implemented when sfExOp " + \
+                        "tensors are present"
+
+  # if the term is already normal ordered, return it unchanged
+  elif inTerm.isNormalOrdered():
+    outTerms = [inTerm.copy()]
+
+  # Normal ordering for creOp/desOp
+  elif has_creDesOps:
+    # Separate the cre/des operators from other tensors
+    ops = []
+    nonOps = []
+    for t in inTerm.tensors:
+      if isinstance(t, creOp) or isinstance(t, desOp):
+        ops.append(t.copy())
+      else:
+        nonOps.append(t.copy())
+
+    # Generate all contraction pairs
+    contractionPairs = []
+    for i in range(len(ops)):
+      iTerm = ops[i]
+      for j in range(i+1,len(ops)):
+        jTerm = ops[j]
+        if isinstance(iTerm, desOp) and isinstance(jTerm, creOp):
+          contractionPairs.append((i,j));
+    #print "contractionPairs\n", contractionPairs
+
+    # Determine maximum contraction order
+    creCount = 0
+    maxConOrder = 0
+    for i in range(len(ops)-1,-1,-1):
+      iTerm = ops[i]
+      if isinstance(iTerm, creOp):
+        creCount +=1
+      elif isinstance(iTerm, desOp) and creCount > 0:
+        maxConOrder += 1
+        creCount -= 1
+    del(creCount,iTerm)
+    #print "maxConOrder:\n", maxConOrder
+
+    # Generate maximum contractions
+    contractions = []
+
+    #for i in range(maxConOrder+1):
+    i = maxConOrder 
+    subCons = makeTuples(i,contractionPairs)
+    #print "len subCons:\n", len(subCons) 
+    j = 0
+    while j < len(subCons):
+      creOpTags = []
+      desOpTags = []
+      for k in range(i):
+        creOpTags.append(subCons[j][k][1])
+        desOpTags.append(subCons[j][k][0])
+      if allDifferent(creOpTags) and allDifferent(desOpTags):
+        j += 1
+      else:
+        del(subCons[j])
+    for j in range(len(subCons)):
+      contractions.append(subCons[j])
+
+    del(subCons,creOpTags,desOpTags,contractionPairs)
+    #print "contractions:\n", contractions
+
+    # For each contraction, generate the resulting term
+    outTerms = []
+    for contraction in contractions:
+      conSign = 1
+      deltaFuncs = []
+      conIndeces = []
+      subOpString = []
+      subOpString.extend(ops)
+      for conPair in contraction:
+        index1 = ops[conPair[0]].indices[0]
+        index2 = ops[conPair[1]].indices[0]
+        deltaFuncs.append(kroneckerDelta([index1,index2]))
+        subOpString[conPair[0]] = 'contracted'
+        subOpString[conPair[1]] = 'contracted'
+        for q in subOpString[conPair[0]+1:conPair[1]]:
+          if not (q is 'contracted'):
+            conSign *= -1
+      i = 0
+      while i < len(subOpString):
+        if subOpString[i] is 'contracted':
+          del(subOpString[i])
+        else:
+          i += 1
+      (sortSign,sortedOps) = sortOps(subOpString)
+      totalSign = conSign * sortSign
+      outTensors = []
+      outTensors.extend(nonOps)
+      outTensors.extend(deltaFuncs)
+      outTensors.extend(sortedOps)
+      outTerms.append( term(totalSign * inTerm.numConstant, inTerm.constants, outTensors) )
 
   else:
     raise RuntimeError, "Normal ordering function failed to choose what to do."

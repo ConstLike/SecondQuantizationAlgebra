@@ -373,6 +373,8 @@ class sfExOp(tensor):
         self.spin = [tmp1, tmp1]
         #print 'default', self.spin  
     else:
+        assert self.order == len(spin[0]) 
+        assert self.order == len(spin[1])
         self.spin = spin 
         #print 'value', self.spin  
 
