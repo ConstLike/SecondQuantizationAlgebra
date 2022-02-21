@@ -567,7 +567,7 @@ def overlap(bra, ops, ket, dbg=False):
     if True: print "contract form"
     startTime = time.time()
     for t in ov_tmp3:
-        t.contractDeltaFuncs_konst()
+        t.contractDeltaFuncs_mrsf()
         if dbg: print t
     if True: print ""
     print " (%.3f seconds)\n" %(time.time()-startTime)

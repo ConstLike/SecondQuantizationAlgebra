@@ -272,6 +272,52 @@ class term:
       # Otherwise move on to the next tensor
       else:
         i += 1
+  #------------------------------------------------------------------------------------------------
+
+  def contractDeltaFuncs_mrsf(self):
+    "Contracts the indices within any kronecker delta functions in the term."
+
+    i = 0
+    while i < len(self.tensors):
+      t = self.tensors[i]
+      
+      # If the term is a delta funciton with a repeated index, remove it
+      if isinstance(t, kroneckerDelta) and (t.indices[0] == t.indices[1]):
+        del(self.tensors[i])
+
+      # If the term is a delta funciton with contractable indices, contract them and remove the delta func
+      elif isinstance(t, kroneckerDelta) and (t.indices[0].isSummed or t.indices[1].isSummed):
+        i0 = t.indices[0]
+        i1 = t.indices[1]
+
+        # Check that the indices have the same number of type groups
+        if len(i0.indType) != len(i1.indType):
+          raise RuntimeError, "Cannot contract indices %s, %s.  They have different numbers of type groups." %(str(i0), str(i1))
+
+        # Determine the type of the new index based on the overlap between
+        # the types of the two indices
+        typeOverlap = []
+        for j in range(len(i0.indType)):
+          typeOverlap.append([])
+          for typeString in i0.indType[j]:
+            if typeString in i1.indType[j]:
+              typeOverlap[-1].append(typeString)
+
+        # If there is no overlap between any of the type groups, the delta function is zero
+        if ( len(i0.indType) > 0 or len(i1.indType) > 0 ) and [] in typeOverlap:
+          self.numConstant = 0.0
+          return
+
+        # Create the new index
+        if not i0.isSummed:
+          newIndex = index(i0.name, typeOverlap, i0.isSummed)
+        else:
+          newIndex = index(i1.name, typeOverlap, i1.isSummed)
+
+      # Otherwise move on to the next tensor
+        i += 1
+      else:
+        i += 1
 
 
 #--------------------------------------------------------------------------------------------------
