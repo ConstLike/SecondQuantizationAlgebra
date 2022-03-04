@@ -1,0 +1,78 @@
+SDTDM <10|a^+_ub a_ta|11>
+bra:
+ (   0.70711) X*_LR1       des(Cca) des(Ccb) des(O1b) des(O2a) 
+ (   0.70711) X*_LR2       des(Cca) des(Ccb) des(O1a) des(O2b) 
+ (   0.70711) X*_iO1 sum_i des(O1b) des(Cib) des(O1a) des(O2a) 
+ (   0.70711) X*_iO1 sum_i des(Cia) des(O1a) des(O1b) des(O2b) 
+ (   0.70711) X*_iO2 sum_i des(O2b) des(Cib) des(O1a) des(O2a) 
+ (   0.70711) X*_iO2 sum_i des(Cia) des(O2a) des(O1b) des(O2b) 
+ (   0.70711) X*_O1a sum_a des(Cca) des(Ccb) des(Vab) des(O2a) 
+ (   0.70711) X*_O1a sum_a des(Cca) des(Ccb) des(Vaa) des(O2b) 
+ (   0.70711) X*_O2a sum_a des(Cca) des(Ccb) des(O1a) des(Vab) 
+ (   0.70711) X*_O2a sum_a des(Cca) des(Ccb) des(O1b) des(Vaa) 
+ops:
+ (   1.00000) cre(u_b) 
+ (   1.00000) des(t_a) 
+ket:
+ (   1.00000) X_LR1        cre(O2a) cre(O1a) cre(Ccb) cre(Cca) 
+ (   1.00000) X_LR2        cre(O2b) cre(O1b) cre(Ccb) cre(Cca) 
+ (   1.00000) X_jO1 sum_j  cre(O2a) cre(O1b) cre(O1a) cre(Cja) 
+ (   1.00000) X_jO1 sum_j  cre(O2b) cre(O1a) cre(Cjb) cre(O1b) 
+ (   1.00000) X_jO2 sum_j  cre(O2a) cre(O1a) cre(Cja) cre(O2b) 
+ (   1.00000) X_jO2 sum_j  cre(O2a) cre(O1b) cre(Cjb) cre(O2b) 
+ (   1.00000) X_O1b sum_b  cre(O2a) cre(Vba) cre(Ccb) cre(Cca) 
+ (   1.00000) X_O1b sum_b  cre(O2b) cre(Vbb) cre(Ccb) cre(Cca) 
+ (   1.00000) X_O2b sum_b  cre(Vba) cre(O1a) cre(Ccb) cre(Cca) 
+ (   1.00000) X_O2b sum_b  cre(Vbb) cre(O1b) cre(Ccb) cre(Cca) 
+expand terms
+ (0.008 seconds)
+
+normal Order for maximum contraction form
+ (33.562 seconds)
+
+remove near zero terms
+
++(   0.70711) X*_iO1 sum_i X_jO1 sum_j  kdelta(Cib,u_b) kdelta(t_a,Cja) 
++(   0.70711) X*_iO2 sum_i X_jO2 sum_j  kdelta(Cib,u_b) kdelta(t_a,Cja) 
+
++(   0.70711) X*_LR1       X_jO1 sum_j  kdelta(Ccb,u_b) kdelta(t_a,O1a) kdelta(Cca,Cja)
+
++(   0.70711) X*_LR2       X_jO2 sum_j  kdelta(Ccb,u_b) kdelta(t_a,O2a) kdelta(Cca,Cja)
+
+
+
++(   0.70711) X*_iO1 sum_i X_LR1        kdelta(O1b,u_b) kdelta(t_a,Cca) kdelta(Cib,Ccb)
+
++(   0.70711) X*_LR1       X_LR1        kdelta(O1b,u_b) kdelta(t_a,O1a) 
++(   0.70711) X*_iO2 sum_i X_jO2 sum_j  kdelta(O1b,u_b) kdelta(t_a,O1a) kdelta(Cia,Cja)
++(   0.70711) X*_O2a sum_a X_O2b sum_b  kdelta(O1b,u_b) kdelta(t_a,O1a) kdelta(Vaa,Vba)
+
++(  -0.70711) X*_iO1 sum_i X_jO2 sum_j  kdelta(O1b,u_b) kdelta(t_a,O2a) kdelta(Cia,Cja)
++(  -0.70711) X*_O2a sum_a X_O1b sum_b  kdelta(O1b,u_b) kdelta(t_a,O2a) kdelta(Vaa,Vba)
+
++(   0.70711) X*_LR1       X_O1b sum_b  kdelta(O1b,u_b) kdelta(t_a,Vba) 
+
+
+
++(   0.70711) X*_iO2 sum_i X_LR1        kdelta(O2b,u_b) kdelta(t_a,Cca) kdelta(Cib,Ccb)
+
++(  -0.70711) X*_iO2 sum_i X_jO1 sum_j  kdelta(O2b,u_b) kdelta(t_a,O1a) kdelta(Cia,Cja)
++(  -0.70711) X*_O1a sum_a X_O2b sum_b  kdelta(O2b,u_b) kdelta(t_a,O1a) kdelta(Vaa,Vba)
+
++(   0.70711) X*_iO1 sum_i X_jO1 sum_j  kdelta(O2b,u_b) kdelta(t_a,O2a) kdelta(Cia,Cja)
++(   0.70711) X*_LR2       X_LR1        kdelta(O2b,u_b) kdelta(t_a,O2a) 
++(   0.70711) X*_O1a sum_a X_O1b sum_b  kdelta(O2b,u_b) kdelta(t_a,O2a) kdelta(Vaa,Vba)
+
++(   0.70711) X*_LR2       X_O2b sum_b  kdelta(O2b,u_b) kdelta(t_a,Vba) 
+
+
+
++(   0.70711) X*_O1a sum_a X_LR1        kdelta(Vab,u_b) kdelta(t_a,O1a) 
+
++(   0.70711) X*_O2a sum_a X_LR1        kdelta(Vab,u_b) kdelta(t_a,O2a) 
+
+ (   0.70711) X*_O1a sum_a X_O1b sum_b  kdelta(Vab,u_b) kdelta(t_a,Vba) 
+ (   0.70711) X*_O2a sum_a X_O2b sum_b  kdelta(Vab,u_b) kdelta(t_a,Vba) 
+
+ (0.010 seconds)
+

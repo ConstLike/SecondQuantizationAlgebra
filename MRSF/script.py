@@ -1,4 +1,6 @@
 import secondQuantizationAlgebra as sqa
+from sqaTensor import tensor, kroneckerDelta, creOp, desOp, sfExOp
+from sqaOptions import options
 import math 
 import time
 
@@ -11,7 +13,7 @@ tag_core    = sqa.options.core_type
 tag_active1 = sqa.options.active_type
 tag_active2 = sqa.options.active_type2
 tag_virtual = sqa.options.virtual_type
-tag_total  = tag_core + tag_active1 + tag_active2 + tag_virtual
+tag_total   = tag_core + tag_active1 + tag_active2 + tag_virtual
 
 # indices for wavef 
 dummy = True
@@ -40,16 +42,12 @@ u_b = sqa.index('u_b', [tag_total, tag_beta ],  dummy)
 # 
 Cca_cre = sqa.creOp(Cca)
 Ccb_cre = sqa.creOp(Ccb)
-Cia_cre = sqa.creOp(Cia)
-Cib_cre = sqa.creOp(Cib)
 Cja_cre = sqa.creOp(Cja)
 Cjb_cre = sqa.creOp(Cjb)
 O1a_cre = sqa.creOp(O1a)
 O1b_cre = sqa.creOp(O1b)
 O2a_cre = sqa.creOp(O2a)
 O2b_cre = sqa.creOp(O2b)
-Vaa_cre = sqa.creOp(Vaa)
-Vab_cre = sqa.creOp(Vab)
 Vba_cre = sqa.creOp(Vba)
 Vbb_cre = sqa.creOp(Vbb)
 
@@ -57,16 +55,12 @@ Cca_des = sqa.desOp(Cca)
 Ccb_des = sqa.desOp(Ccb)
 Cia_des = sqa.desOp(Cia)
 Cib_des = sqa.desOp(Cib)
-Cja_des = sqa.desOp(Cja)
-Cjb_des = sqa.desOp(Cjb)
 O1a_des = sqa.desOp(O1a)
 O1b_des = sqa.desOp(O1b)
 O2a_des = sqa.desOp(O2a)
 O2b_des = sqa.desOp(O2b)
 Vaa_des = sqa.desOp(Vaa)
 Vab_des = sqa.desOp(Vab)
-Vba_des = sqa.desOp(Vba)
-Vbb_des = sqa.desOp(Vbb)
 
 ta_des = sqa.desOp(t_a)
 tb_des = sqa.desOp(t_b)
@@ -78,16 +72,11 @@ t_tb_des = sqa.term(1.0,[],[tb_des])
 t_ua_cre = sqa.term(1.0,[],[ua_cre])
 t_ub_cre = sqa.term(1.0,[],[ub_cre])
 
-#Ms_p_ref_bra = [o2a_cre, o1a_cre, cib_cre, cia_cre]
-#Ms_m_ref_bra = [o2b_cre, o1b_cre, cib_cre, cia_cre]
-
-#Ms_p_ref_ket = [cia_des, cib_des, o1a_des, o2a_des]
-#Ms_m_ref_ket = [cia_des, cib_des, o1b_des, o2b_des]
 
 def genCSF(string, S, Ms, bra=False, ket=False):
   assert len(string) == 4                      # MRSF C, O1, O2, V orbital space
   for occ in string:
-      assert occ == 0 or occ == 1 or occ == 2  # a string of occupation number (0/1/2) in orbital
+    assert occ == 0 or occ == 1 or occ == 2  # a string of occupation number (0/1/2) in orbital
   assert bra or ket                            # select bra or ket
   assert not (bra and ket)                     # select bra or ket
   nc1 = string[0]
@@ -95,27 +84,27 @@ def genCSF(string, S, Ms, bra=False, ket=False):
   nv1 = string[2]
   nv2 = string[3]
 
-  if (S == 0 and Ms == 0) :
+  if (S == 0 and Ms == 0) :                                 # Singlet
     #G
     if nc1 == 2 and nc2 == 2 and nv1 == 0 and nv2 == 0:
         CGcoeff = 1.0
         if ket:
-            X = [sqa.tensor('X_G         ', [O1b,O2a], [])]
+            X = [sqa.tensor('X_G         ', [O2a,O1b], [])]
             Op= [O1b_cre, O1a_cre, Ccb_cre, Cca_cre]
             terms = [sqa.term(CGcoeff,[],X+Op)]
         elif bra:
-            X = [sqa.tensor('X*_G        ', [O1b,O2a], [])]
+            X = [sqa.tensor('X*_G        ', [O2a,O1b], [])]
             Op= [Cca_des, Ccb_des, O1a_des, O1b_des]
             terms = [sqa.term(CGcoeff,[],X+Op)]
     #D
     elif nc1 == 2 and nc2 == 0 and nv1 == 2 and nv2 == 0:
         CGcoeff = 1.0
         if ket:
-            X = [sqa.tensor('X_D         ', [O2b,O1a], [])]
+            X = [sqa.tensor('X_D         ', [O1b,O2a], [])]
             Op= [O2a_cre, O2b_cre, Ccb_cre, Cca_cre] 
             terms = [sqa.term(CGcoeff,[],X+Op)]
         elif bra:
-            X = [sqa.tensor('X*_D        ', [O2b,O1a], [])]
+            X = [sqa.tensor('X*_D        ', [O1b,O2a], [])]
             Op= [Cca_des, Ccb_des, O2b_des, O2a_des]
             terms = [sqa.term(CGcoeff,[],X+Op)]
     #L,R
@@ -141,17 +130,17 @@ def genCSF(string, S, Ms, bra=False, ket=False):
         CGcoeff = 1.0/math.sqrt(2.0) 
         terms = []
         if ket:
-            X = [sqa.tensor('X_jO1 sum_j ', [O1b,Cia], [])]
+            X = [sqa.tensor('X_jO1 sum_j ', [Cia,O1b], [])]
             Op= [O2a_cre, O1a_cre, Cjb_cre, O1b_cre]
             terms.append(sqa.term(CGcoeff,[],X+Op))
-            X = [sqa.tensor('X_jO1 sum_j ', [O1b,Cia], [])]
+            X = [sqa.tensor('X_jO1 sum_j ', [Cia,O1b], [])]
             Op= [O2b_cre, O1b_cre, O1a_cre, Cja_cre]
             terms.append(sqa.term((-1.0)*CGcoeff,[],X+Op))
         elif bra:
-            X = [sqa.tensor('X*_iO1 sum_i', [O1b,Cia], [])]
+            X = [sqa.tensor('X*_iO1 sum_i', [Cia,O1b], [])]
             Op= [O1b_des, Cib_des, O1a_des, O2a_des] 
             terms.append(sqa.term(CGcoeff,[],X+Op))
-            X = [sqa.tensor('X*_iO1 sum_i', [O1b,Cia], [])]
+            X = [sqa.tensor('X*_iO1 sum_i', [Cia,O1b], [])]
             Op= [Cia_des, O1a_des, O1b_des, O2b_des]
             terms.append(sqa.term((-1.0)*CGcoeff,[],X+Op))
     #CO2
@@ -159,17 +148,17 @@ def genCSF(string, S, Ms, bra=False, ket=False):
         CGcoeff = 1.0/math.sqrt(2.0) 
         terms = []
         if ket:
-            X = [sqa.tensor('X_jO2 sum_j ', [O2b,Cia], [])]
+            X = [sqa.tensor('X_jO2 sum_j ', [Cia,O2b], [])]
             Op= [O2a_cre, O1a_cre, Cjb_cre, O2b_cre] 
             terms.append(sqa.term(CGcoeff,[],X+Op))
-            X = [sqa.tensor('X_jO2 sum_j ', [O2b,Cia], [])]
+            X = [sqa.tensor('X_jO2 sum_j ', [Cia,O2b], [])]
             Op= [O2b_cre, O1b_cre, O2a_cre, Cja_cre] 
             terms.append(sqa.term((-1.0)*CGcoeff,[],X+Op))
         elif bra:
-            X = [sqa.tensor('X*_iO2 sum_i', [O2b,Cia], [])]
+            X = [sqa.tensor('X*_iO2 sum_i', [Cia,O2b], [])]
             Op= [O2b_des, Cib_des, O1a_des, O2a_des]
             terms.append(sqa.term(CGcoeff,[],X+Op))
-            X = [sqa.tensor('X*_iO2 sum_i', [O2b,Cia], [])]
+            X = [sqa.tensor('X*_iO2 sum_i', [Cia,O2b], [])]
             Op= [Cia_des, O2a_des, O1b_des, O2b_des]
             terms.append(sqa.term((-1.0)*CGcoeff,[],X+Op))
     #O1V
@@ -177,17 +166,17 @@ def genCSF(string, S, Ms, bra=False, ket=False):
         CGcoeff = 1.0/math.sqrt(2.0) 
         terms = []
         if ket:
-            X = [sqa.tensor('X_O1b sum_b ', [Vab,O1a], [])]
+            X = [sqa.tensor('X_O1b sum_b ', [O1a,Vab], [])]
             Op= [O2a_cre, Vbb_cre, Ccb_cre, Cca_cre] 
             terms.append(sqa.term(CGcoeff,[],X+Op))
-            X = [sqa.tensor('X_O1b sum_b ', [Vab,O1a], [])]
+            X = [sqa.tensor('X_O1b sum_b ', [O1a,Vab], [])]
             Op= [O2b_cre, Vba_cre, Ccb_cre, Cca_cre] 
             terms.append(sqa.term((-1.0)*CGcoeff,[],X+Op))
         elif bra:
-            X = [sqa.tensor('X*_O1a sum_a', [Vab,O1a], [])]
+            X = [sqa.tensor('X*_O1a sum_a', [O1a,Vab], [])]
             Op= [Cca_des, Ccb_des, Vab_des, O2a_des]
             terms.append(sqa.term(CGcoeff,[],X+Op))
-            X = [sqa.tensor('X*_O1a sum_a', [Vab,O1a], [])]
+            X = [sqa.tensor('X*_O1a sum_a', [O1a,Vab], [])]
             Op= [Cca_des, Ccb_des, Vaa_des, O2b_des]
             terms.append(sqa.term((-1.0)*CGcoeff,[],X+Op))
     #O2V
@@ -195,47 +184,24 @@ def genCSF(string, S, Ms, bra=False, ket=False):
         CGcoeff = 1.0/math.sqrt(2.0) 
         terms = []
         if ket:
-            X = [sqa.tensor('X_O2b sum_b ', [Vab,O2a], [])]
+            X = [sqa.tensor('X_O2b sum_b ', [O2a,Vab], [])]
             Op= [Vbb_cre, O1a_cre, Ccb_cre, Cca_cre]
             terms.append(sqa.term(CGcoeff,[],X+Op))
-            X = [sqa.tensor('X_O2b sum_b ', [Vab,O2a], [])]
+            X = [sqa.tensor('X_O2b sum_b ', [O2a,Vab], [])]
             Op= [Vba_cre, O1b_cre, Ccb_cre, Cca_cre]
             terms.append(sqa.term((-1.0)*CGcoeff,[],X+Op))
         elif bra:
-            X = [sqa.tensor('X*_O2a sum_a', [Vab,O2a], [])]
+            X = [sqa.tensor('X*_O2a sum_a', [O2a,Vab], [])]
             Op= [Cca_des, Ccb_des, O1a_des, Vab_des]
             terms.append(sqa.term(CGcoeff,[],X+Op))
-            X = [sqa.tensor('X*_O2a sum_a', [Vab,O2a], [])]
+            X = [sqa.tensor('X*_O2a sum_a', [O2a,Vab], [])]
             Op= [Cca_des, Ccb_des, O1b_des, Vaa_des]
             terms.append(sqa.term((-1.0)*CGcoeff,[],X+Op))
 
 
-  if  (S == 1 and Ms == 0) :
-
-    #G
-    if nc1 == 2 and nc2 == 2 and nv1 == 0 and nv2 == 0:
-        CGcoeff = 1.0
-        if ket:
-            X = [sqa.tensor('X_G         ', [O1b,O2a], [])]
-            Op= [O1b_cre, O1a_cre, Ccb_cre, Cca_cre]
-            terms = [sqa.term(CGcoeff,[],X+Op)]
-        elif bra:
-            X = [sqa.tensor('X*_G        ', [O1b,O2a], [])]
-            Op= [Cca_des, Ccb_des, O1a_des, O1b_des]
-            terms = [sqa.term(CGcoeff,[],X+Op)]
-    #D
-    elif nc1 == 2 and nc2 == 0 and nv1 == 2 and nv2 == 0:
-        CGcoeff = 1.0
-        if ket:
-            X = [sqa.tensor('X_D         ', [O2b,O1a], [])]
-            Op= [O2a_cre, O2b_cre, Ccb_cre, Cca_cre] 
-            terms = [sqa.term(CGcoeff,[],X+Op)]
-        elif bra:
-            X = [sqa.tensor('X*_D        ', [O2b,O1a], [])]
-            Op= [Cca_des, Ccb_des, O2b_des, O2a_des]
-            terms = [sqa.term(CGcoeff,[],X+Op)]
+  elif  (S == 1 and Ms == 0) :                               # Triplet Ms = 0
     #L,R
-    elif nc1 == 2 and nc2 == 1 and nv1 == 1 and nv2 == 0:
+    if nc1 == 2 and nc2 == 1 and nv1 == 1 and nv2 == 0:
         CGcoeff = 1.0/math.sqrt(2.0) 
         terms = []
         if ket:
@@ -251,82 +217,82 @@ def genCSF(string, S, Ms, bra=False, ket=False):
             terms.append(sqa.term(CGcoeff,[],X+Op))
             X = [sqa.tensor('X*_LR2      ', [O2b,O2a], [])]
             Op= [Cca_des, Ccb_des, O1a_des, O2b_des]
-            terms.append(sqa.term((+1.0)*CGcoeff,[],X+Op))
+            terms.append(sqa.term(CGcoeff,[],X+Op))
     #CO1
     elif nc1 == 1 and nc2 == 2 and nv1 == 1 and nv2 == 0:
         CGcoeff = 1.0/math.sqrt(2.0) 
         terms = []
         if ket:
-            X = [sqa.tensor('X_jO1 sum_j ', [O1b,Cia], [])]
+            X = [sqa.tensor('X_jO1 sum_j ', [Cia,O1b], [])]
             Op= [O2a_cre, O1a_cre, Cjb_cre, O1b_cre]
             terms.append(sqa.term(CGcoeff,[],X+Op))
-            X = [sqa.tensor('X_jO1 sum_j ', [O1b,Cia], [])]
+            X = [sqa.tensor('X_jO1 sum_j ', [Cia,O1b], [])]
             Op= [O2b_cre, O1b_cre, O1a_cre, Cja_cre]
             terms.append(sqa.term(CGcoeff,[],X+Op))
         elif bra:
-            X = [sqa.tensor('X*_iO1 sum_i', [O1b,Cia], [])]
+            X = [sqa.tensor('X*_iO1 sum_i', [Cia,O1b], [])]
             Op= [O1b_des, Cib_des, O1a_des, O2a_des] 
             terms.append(sqa.term(CGcoeff,[],X+Op))
-            X = [sqa.tensor('X*_iO1 sum_i', [O1b,Cia], [])]
+            X = [sqa.tensor('X*_iO1 sum_i', [Cia,O1b], [])]
             Op= [Cia_des, O1a_des, O1b_des, O2b_des]
-            terms.append(sqa.term((+1.0)*CGcoeff,[],X+Op))
+            terms.append(sqa.term(CGcoeff,[],X+Op))
     #CO2
     elif nc1 == 1 and nc2 == 1 and nv1 == 2 and nv2 == 0:
         CGcoeff = 1.0/math.sqrt(2.0) 
         terms = []
         if ket:
-            X = [sqa.tensor('X_jO2 sum_j ', [O2b,Cia], [])]
+            X = [sqa.tensor('X_jO2 sum_j ', [Cia,O2b], [])]
             Op= [O2a_cre, O1a_cre, Cjb_cre, O2b_cre] 
             terms.append(sqa.term(CGcoeff,[],X+Op))
-            X = [sqa.tensor('X_jO2 sum_j ', [O2b,Cia], [])]
+            X = [sqa.tensor('X_jO2 sum_j ', [Cia,O2b], [])]
             Op= [O2b_cre, O1b_cre, O2a_cre, Cja_cre] 
             terms.append(sqa.term(CGcoeff,[],X+Op))
         elif bra:
-            X = [sqa.tensor('X*_iO2 sum_i', [O2b,Cia], [])]
+            X = [sqa.tensor('X*_iO2 sum_i', [Cia,O2b], [])]
             Op= [O2b_des, Cib_des, O1a_des, O2a_des]
             terms.append(sqa.term(CGcoeff,[],X+Op))
-            X = [sqa.tensor('X*_iO2 sum_i', [O2b,Cia], [])]
+            X = [sqa.tensor('X*_iO2 sum_i', [Cia,O2b], [])]
             Op= [Cia_des, O2a_des, O1b_des, O2b_des]
-            terms.append(sqa.term((+1.0)*CGcoeff,[],X+Op))
+            terms.append(sqa.term(CGcoeff,[],X+Op))
     #O1V
     elif nc1 == 2 and nc2 == 0 and nv1 == 1 and nv2 == 1:
         CGcoeff = 1.0/math.sqrt(2.0) 
         terms = []
         if ket:
-            X = [sqa.tensor('X_O1b sum_b ', [Vab,O1a], [])]
+            X = [sqa.tensor('X_O1b sum_b ', [O1a,Vab], [])]
             Op= [O2a_cre, Vbb_cre, Ccb_cre, Cca_cre] 
             terms.append(sqa.term(CGcoeff,[],X+Op))
-            X = [sqa.tensor('X_O1b sum_b ', [Vab,O1a], [])]
+            X = [sqa.tensor('X_O1b sum_b ', [O1a,Vab], [])]
             Op= [O2b_cre, Vba_cre, Ccb_cre, Cca_cre] 
             terms.append(sqa.term(CGcoeff,[],X+Op))
         elif bra:
-            X = [sqa.tensor('X*_O1a sum_a', [Vab,O1a], [])]
+            X = [sqa.tensor('X*_O1a sum_a', [O1a,Vab], [])]
             Op= [Cca_des, Ccb_des, Vab_des, O2a_des]
             terms.append(sqa.term(CGcoeff,[],X+Op))
-            X = [sqa.tensor('X*_O1a sum_a', [Vab,O1a], [])]
+            X = [sqa.tensor('X*_O1a sum_a', [O1a,Vab], [])]
             Op= [Cca_des, Ccb_des, Vaa_des, O2b_des]
-            terms.append(sqa.term((+1.0)*CGcoeff,[],X+Op))
+            terms.append(sqa.term(CGcoeff,[],X+Op))
     #O2V
     elif nc1 == 2 and nc2 == 1 and nv1 == 0 and nv2 == 1:
         CGcoeff = 1.0/math.sqrt(2.0) 
         terms = []
         if ket:
-            X = [sqa.tensor('X_O2b sum_b ', [Vab,O2a], [])]
+            X = [sqa.tensor('X_O2b sum_b ', [O2a,Vab], [])]
             Op= [Vbb_cre, O1a_cre, Ccb_cre, Cca_cre]
             terms.append(sqa.term(CGcoeff,[],X+Op))
-            X = [sqa.tensor('X_O2b sum_b ', [Vab,O2a], [])]
+            X = [sqa.tensor('X_O2b sum_b ', [O2a,Vab], [])]
             Op= [Vba_cre, O1b_cre, Ccb_cre, Cca_cre]
             terms.append(sqa.term(CGcoeff,[],X+Op))
         elif bra:
-            X = [sqa.tensor('X*_O2a sum_a', [Vab,O2a], [])]
+            X = [sqa.tensor('X*_O2a sum_a', [O2a,Vab], [])]
             Op= [Cca_des, Ccb_des, O1a_des, Vab_des]
             terms.append(sqa.term(CGcoeff,[],X+Op))
-            X = [sqa.tensor('X*_O2a sum_a', [Vab,O2a], [])]
+            X = [sqa.tensor('X*_O2a sum_a', [O2a,Vab], [])]
             Op= [Cca_des, Ccb_des, O1b_des, Vaa_des]
-            terms.append(sqa.term((+1.0)*CGcoeff,[],X+Op))
+            terms.append(sqa.term(CGcoeff,[],X+Op))
 
 
-  elif (S == 1 and Ms ==+1):
+  elif (S == 1 and Ms ==+1):                               # Triplet Ms = +1
     #L,R
     if nc1 == 2 and nc2 == 1 and nv1 == 1 and nv2 == 0:
         CGcoeff = 1.0
@@ -340,85 +306,85 @@ def genCSF(string, S, Ms, bra=False, ket=False):
             terms.append(sqa.term(CGcoeff,[],X+Op))
         elif bra:
             X = [sqa.tensor('X*_LR1      ', [O1b,O1a], [])]
-            Op= [Cca_des, Ccb_des, O1b_des, O2b_des]
-            terms.append(sqa.term((+1.0)*CGcoeff,[],X+Op))
-            X = [sqa.tensor('X*_LR2      ', [O2b,O2a], [])]
             Op= [Cca_des, Ccb_des, O1a_des, O2a_des]
-            terms.append(sqa.term((+1.0)*CGcoeff,[],X+Op))
+            terms.append(sqa.term(CGcoeff,[],X+Op))
+            X = [sqa.tensor('X*_LR2      ', [O2b,O2a], [])]
+            Op= [Cca_des, Ccb_des, O1b_des, O2b_des]
+            terms.append(sqa.term(CGcoeff,[],X+Op))
     #CO1
     elif nc1 == 1 and nc2 == 2 and nv1 == 1 and nv2 == 0:
         CGcoeff = 1.0
         terms = []
         if ket:
-            X = [sqa.tensor('X_jO1 sum_j ', [O1b,Cia], [])]
-            Op= [O2a_cre, O1b_cre, O1a_cre, Cja_cre]
-            terms.append(sqa.term(CGcoeff,[],X+Op))
-            X = [sqa.tensor('X_jO1 sum_j ', [O1b,Cia], [])]
+            X = [sqa.tensor('X_jO1 sum_j ', [Cia,O1b], [])]
             Op= [O2b_cre, O1a_cre, Cjb_cre, O1b_cre]
             terms.append(sqa.term(CGcoeff,[],X+Op))
+            X = [sqa.tensor('X_jO1 sum_j ', [Cia,O1b], [])]
+            Op= [O2a_cre, O1b_cre, O1a_cre, Cja_cre]
+            terms.append(sqa.term(CGcoeff,[],X+Op))
         elif bra:
-            X = [sqa.tensor('X*_iO1 sum_i', [O1b,Cia], [])]
-            Op= [Cia_des, O1a_des, O1b_des, O2a_des]
-            terms.append(sqa.term((+1.0)*CGcoeff,[],X+Op))
-            X = [sqa.tensor('X*_iO1 sum_i', [O1b,Cia], [])]
+            X = [sqa.tensor('X*_iO1 sum_i', [Cia,O1b], [])]
             Op= [O1b_des, Cib_des, O1a_des, O2b_des]
-            terms.append(sqa.term((+1.0)*CGcoeff,[],X+Op))
+            terms.append(sqa.term(CGcoeff,[],X+Op))
+            X = [sqa.tensor('X*_iO1 sum_i', [Cia,O1b], [])]
+            Op= [Cia_des, O1a_des, O1b_des, O2a_des]
+            terms.append(sqa.term(CGcoeff,[],X+Op))
     #CO2
     elif nc1 == 1 and nc2 == 1 and nv1 == 2 and nv2 == 0:
         CGcoeff = 1.0
         terms = []
         if ket:
-            X = [sqa.tensor('X_jO2 sum_j ', [O2b,Cia], [])]
+            X = [sqa.tensor('X_jO2 sum_j ', [Cia,O2b], [])]
             Op= [O2a_cre, O1a_cre, Cja_cre, O2b_cre] 
             terms.append(sqa.term(CGcoeff,[],X+Op))
-            X = [sqa.tensor('X_jO2 sum_j ', [O2b,Cia], [])]
-            Op= [O2a_cre, O1b_cre, Cjb_cre, O2b_cre] 
+            X = [sqa.tensor('X_jO2 sum_j ', [Cia,O2b], [])]
+            Op= [O2b_cre, O1b_cre, O2a_cre, Cjb_cre] 
             terms.append(sqa.term(CGcoeff,[],X+Op))
         elif bra:
-            X = [sqa.tensor('X*_iO2 sum_i', [O2b,Cia], [])]
+            X = [sqa.tensor('X*_iO2 sum_i', [Cia,O2b], [])]
             Op= [O2b_des, Cia_des, O1a_des, O2a_des]
-            terms.append(sqa.term((+1.0)*CGcoeff,[],X+Op))
-            X = [sqa.tensor('X*_iO2 sum_i', [O2b,Cia], [])]
-            Op= [O2b_des, Cib_des, O1b_des, O2a_des]
-            terms.append(sqa.term((+1.0)*CGcoeff,[],X+Op))
+            terms.append(sqa.term(CGcoeff,[],X+Op))
+            X = [sqa.tensor('X*_iO2 sum_i', [Cia,O2b], [])]
+            Op= [Cib_des, O2a_des, O1b_des, O2b_des]
+            terms.append(sqa.term(CGcoeff,[],X+Op))
     #O1V
     elif nc1 == 2 and nc2 == 0 and nv1 == 1 and nv2 == 1:
         CGcoeff = 1.0
         terms = []
         if ket:
-            X = [sqa.tensor('X_O1b sum_b ', [Vab,O1a], [])]
+            X = [sqa.tensor('X_O1b sum_b ', [O1a,Vab], [])]
             Op= [O2a_cre, Vba_cre, Ccb_cre, Cca_cre] 
             terms.append(sqa.term(CGcoeff,[],X+Op))
-            X = [sqa.tensor('X_O1b sum_b ', [Vab,O1a], [])]
+            X = [sqa.tensor('X_O1b sum_b ', [O1a,Vab], [])]
             Op= [O2b_cre, Vbb_cre, Ccb_cre, Cca_cre] 
             terms.append(sqa.term(CGcoeff,[],X+Op))
         elif bra:
-            X = [sqa.tensor('X*_O1a sum_a', [Vab,O1a], [])]
+            X = [sqa.tensor('X*_O1a sum_a', [O1a,Vab], [])]
             Op= [Cca_des, Ccb_des, Vaa_des, O2a_des]
-            terms.append(sqa.term((+1.0)*CGcoeff,[],X+Op))
-            X = [sqa.tensor('X*_O1a sum_a', [Vab,O1a], [])]
+            terms.append(sqa.term(CGcoeff,[],X+Op))
+            X = [sqa.tensor('X*_O1a sum_a', [O1a,Vab], [])]
             Op= [Cca_des, Ccb_des, Vab_des, O2b_des]
-            terms.append(sqa.term((+1.0)*CGcoeff,[],X+Op))
+            terms.append(sqa.term(CGcoeff,[],X+Op))
     #O2V
     elif nc1 == 2 and nc2 == 1 and nv1 == 0 and nv2 == 1:
         CGcoeff = 1.0
         terms = []
         if ket:
-            X = [sqa.tensor('X_O2b sum_b ', [Vab,O2a], [])]
+            X = [sqa.tensor('X_O2b sum_b ', [O2a,Vab], [])]
             Op= [Vba_cre, O1a_cre, Ccb_cre, Cca_cre]
             terms.append(sqa.term(CGcoeff,[],X+Op))
-            X = [sqa.tensor('X_O2b sum_b ', [Vab,O2a], [])]
+            X = [sqa.tensor('X_O2b sum_b ', [O2a,Vab], [])]
             Op= [Vbb_cre, O1b_cre, Ccb_cre, Cca_cre]
             terms.append(sqa.term(CGcoeff,[],X+Op))
         elif bra:
-            X = [sqa.tensor('X*_O2a sum_a', [Vab,O2a], [])]
+            X = [sqa.tensor('X*_O2a sum_a', [O2a,Vab], [])]
             Op= [Cca_des, Ccb_des, O1a_des, Vaa_des]
             terms.append(sqa.term((+1.0)*CGcoeff,[],X+Op))
-            X = [sqa.tensor('X*_O2a sum_a', [Vab,O2a], [])]
+            X = [sqa.tensor('X*_O2a sum_a', [O2a,Vab], [])]
             Op= [Cca_des, Ccb_des, O1b_des, Vab_des]
             terms.append(sqa.term((+1.0)*CGcoeff,[],X+Op))
 
-  elif (S == 1 and Ms ==-1):
+  elif (S == 1 and Ms ==-1):                               # Triplet Ms = -1
     #L,R
     if nc1 == 2 and nc2 == 1 and nv1 == 1 and nv2 == 0:
         CGcoeff = 1.0 
@@ -433,86 +399,87 @@ def genCSF(string, S, Ms, bra=False, ket=False):
         elif bra:
             X = [sqa.tensor('X*_LR1      ', [O1b,O1a], [])]
             Op= [Cca_des, Ccb_des, O1b_des, O2b_des]
-            terms.append(sqa.term((+1.0)*CGcoeff,[],X+Op))
+            terms.append(sqa.term(CGcoeff,[],X+Op))
             X = [sqa.tensor('X*_LR2      ', [O2b,O2a], [])]
             Op= [Cca_des, Ccb_des, O1a_des, O2a_des]
-            terms.append(sqa.term((+1.0)*CGcoeff,[],X+Op))
+            terms.append(sqa.term(CGcoeff,[],X+Op))
     #CO1
     elif nc1 == 1 and nc2 == 2 and nv1 == 1 and nv2 == 0:
         CGcoeff = 1.0
         terms = []
         if ket:
-            X = [sqa.tensor('X_jO1 sum_j ', [O1b,Cia], [])]
+            X = [sqa.tensor('X_jO1 sum_j ', [Cia,O1b], [])]
             Op= [O2a_cre, O1b_cre, O1a_cre, Cja_cre]
             terms.append(sqa.term(CGcoeff,[],X+Op))
-            X = [sqa.tensor('X_jO1 sum_j ', [O1b,Cia], [])]
-            Op= [O2b_cre, O1b_cre, O1a_cre, Cjb_cre]
+            X = [sqa.tensor('X_jO1 sum_j ', [Cia,O1b], [])]
+            Op= [O2b_cre, O1a_cre, Cjb_cre, O1b_cre]
             terms.append(sqa.term(CGcoeff,[],X+Op))
         elif bra:
-            X = [sqa.tensor('X*_iO1 sum_i', [O1b,Cia], [])]
+            X = [sqa.tensor('X*_iO1 sum_i', [Cia,O1b], [])]
             Op= [Cia_des, O1a_des, O1b_des, O2a_des] 
-            terms.append(sqa.term((+1.0)*CGcoeff,[],X+Op))
-            X = [sqa.tensor('X*_iO1 sum_i', [O1b,Cia], [])]
-            Op= [Cib_des, O1a_des, O1b_des, O2b_des]
-            terms.append(sqa.term((+1.0)*CGcoeff,[],X+Op))
+            terms.append(sqa.term(CGcoeff,[],X+Op))
+            X = [sqa.tensor('X*_iO1 sum_i', [Cia,O1b], [])]
+            Op= [O1b_des, Cib_des, O1a_des, O2b_des]
+            terms.append(sqa.term(CGcoeff,[],X+Op))
     #CO2
     elif nc1 == 1 and nc2 == 1 and nv1 == 2 and nv2 == 0:
         CGcoeff = 1.0
         terms = []
         if ket:
-            X = [sqa.tensor('X_jO2 sum_j ', [O2b,Cia], [])]
+            X = [sqa.tensor('X_jO2 sum_j ', [Cia,O2b], [])]
+            Op= [O2b_cre, O1b_cre, O2a_cre, Cjb_cre] 
+            terms.append(sqa.term(CGcoeff,[],X+Op))
+            X = [sqa.tensor('X_jO2 sum_j ', [Cia,O2b], [])]
             Op= [O2a_cre, O1a_cre, Cja_cre, O2b_cre] 
             terms.append(sqa.term(CGcoeff,[],X+Op))
-            X = [sqa.tensor('X_jO2 sum_j ', [O2b,Cia], [])]
-            Op= [O2a_cre, O1b_cre, Cjb_cre, O2b_cre] 
-            terms.append(sqa.term(CGcoeff,[],X+Op))
         elif bra:
-            X = [sqa.tensor('X*_iO2 sum_i', [O2b,Cia], [])]
+            X = [sqa.tensor('X*_iO2 sum_i', [Cia,O2b], [])]
+            Op= [Cib_des, O2a_des, O1b_des, O2b_des]
+            terms.append(sqa.term(CGcoeff,[],X+Op))
+            X = [sqa.tensor('X*_iO2 sum_i', [Cia,O2b], [])]
             Op= [O2b_des, Cia_des, O1a_des, O2a_des]
-            terms.append(sqa.term((+1.0)*CGcoeff,[],X+Op))
-            X = [sqa.tensor('X*_iO2 sum_i', [O2b,Cia], [])]
-            Op= [O2b_des, Cib_des, O1b_des, O2a_des]
-            terms.append(sqa.term((+1.0)*CGcoeff,[],X+Op))
+            terms.append(sqa.term(CGcoeff,[],X+Op))
     #O1V
     elif nc1 == 2 and nc2 == 0 and nv1 == 1 and nv2 == 1:
         CGcoeff = 1.0
         terms = []
         if ket:
-            X = [sqa.tensor('X_O1b sum_b ', [Vab,O1a], [])]
-            Op= [O2a_cre, Vba_cre, Ccb_cre, Cca_cre] 
-            terms.append(sqa.term(CGcoeff,[],X+Op))
-            X = [sqa.tensor('X_O1b sum_b ', [Vab,O1a], [])]
+            X = [sqa.tensor('X_O1b sum_b ', [O1a,Vab], [])]
             Op= [O2b_cre, Vbb_cre, Ccb_cre, Cca_cre] 
             terms.append(sqa.term(CGcoeff,[],X+Op))
+            X = [sqa.tensor('X_O1b sum_b ', [O1a,Vab], [])]
+            Op= [O2a_cre, Vba_cre, Ccb_cre, Cca_cre] 
+            terms.append(sqa.term(CGcoeff,[],X+Op))
         elif bra:
-            X = [sqa.tensor('X*_O1a sum_a', [Vab,O1a], [])]
-            Op= [Cca_des, Ccb_des, Vaa_des, O2a_des]
-            terms.append(sqa.term((+1.0)*CGcoeff,[],X+Op))
-            X = [sqa.tensor('X*_O1a sum_a', [Vab,O1a], [])]
+            X = [sqa.tensor('X*_O1a sum_a', [O1a,Vab], [])]
             Op= [Cca_des, Ccb_des, Vab_des, O2b_des]
-            terms.append(sqa.term((+1.0)*CGcoeff,[],X+Op))
+            terms.append(sqa.term(CGcoeff,[],X+Op))
+            X = [sqa.tensor('X*_O1a sum_a', [O1a,Vab], [])]
+            Op= [Cca_des, Ccb_des, Vaa_des, O2a_des]
+            terms.append(sqa.term(CGcoeff,[],X+Op))
     #O2V
     elif nc1 == 2 and nc2 == 1 and nv1 == 0 and nv2 == 1:
         CGcoeff = 1.0
         terms = []
         if ket:
-            X = [sqa.tensor('X_O2b sum_b ', [Vab,O2a], [])]
-            Op= [Vba_cre, O1a_cre, Ccb_cre, Cca_cre]
-            terms.append(sqa.term(CGcoeff,[],X+Op))
-            X = [sqa.tensor('X_O2b sum_b ', [Vab,O2a], [])]
+            X = [sqa.tensor('X_O2b sum_b ', [O2a,Vab], [])]
             Op= [Vbb_cre, O1b_cre, Ccb_cre, Cca_cre]
             terms.append(sqa.term(CGcoeff,[],X+Op))
+            X = [sqa.tensor('X_O2b sum_b ', [O2a,Vab], [])]
+            Op= [Vba_cre, O1a_cre, Ccb_cre, Cca_cre]
+            terms.append(sqa.term(CGcoeff,[],X+Op))
         elif bra:
-            X = [sqa.tensor('X*_O2a sum_a', [Vab,O2a], [])]
-            Op= [Cca_des, Ccb_des, O1a_des, Vaa_des]
-            terms.append(sqa.term((+1.0)*CGcoeff,[],X+Op))
-            X = [sqa.tensor('X*_O2a sum_a', [Vab,O2a], [])]
+            X = [sqa.tensor('X*_O2a sum_a', [O2a,Vab], [])]
             Op= [Cca_des, Ccb_des, O1b_des, Vab_des]
+            terms.append(sqa.term((+1.0)*CGcoeff,[],X+Op))
+            X = [sqa.tensor('X*_O2a sum_a', [O2a,Vab], [])]
+            Op= [Cca_des, Ccb_des, O1a_des, Vaa_des]
             terms.append(sqa.term((+1.0)*CGcoeff,[],X+Op))
   return terms 
 
 def overlap(bra, ops, ket, dbg=False):
     startTime = time.time()
+    print ""
     print "bra:"
     for t in bra:
         print t
@@ -524,7 +491,7 @@ def overlap(bra, ops, ket, dbg=False):
         print t
 #    print "<bra|ops|ket>:"
 
-    if True: print "expand terms"
+    if dbg: print "expand terms"
     ov_tmp = []
     if len(ops) != 0:
         for tb in bra:
@@ -537,10 +504,11 @@ def overlap(bra, ops, ket, dbg=False):
         for tb in bra:
             for tk in ket:
                 ov_tmp.append(sqa.multiplyTerms(tb, tk))
-    print " (%.3f seconds)\n" %(time.time()-startTime)
+    if dbg: print " (%.3f seconds)\n" %(time.time()-startTime)
 
     #    normal order form
-    if True: print "normal Order for maximum contraction form"
+    print ""
+    if True: print "Making normal order for maximum contraction form, removing delta_{tu}, ..."
     startTime = time.time()
     ov_tmp2= []
     i = 0
@@ -551,37 +519,38 @@ def overlap(bra, ops, ket, dbg=False):
         for tn in term:
             if dbg: print tn
         ov_tmp2 += term
-    print " (%.3f seconds)\n" %(time.time()-startTime)
+    if dbg: print " (%.3f seconds)\n" %(time.time()-startTime)
 
     #TODO: remove terms by vacuumFermi in sqaSLee
-    if True: print "remove delta_{tu} and delta"
-    startTime = time.time()
+    if dbg: print "remove delta_{tu} and delta"
+    if dbg: startTime = time.time()
     ov_tmp3= []
     for t in ov_tmp2:
         tn = sqa.vacuumFermi( t )
         if dbg: print tn 
         ov_tmp3.append( tn )
     if dbg: print ""
-    print " (%.3f seconds)\n" %(time.time()-startTime)
+    if dbg: print " (%.3f seconds)\n" %(time.time()-startTime)
 
-    if True: print "contract form"
-    startTime = time.time()
+    if dbg: print "contract form"
+    if dbg: startTime = time.time()
     for t in ov_tmp3:
         t.contractDeltaFuncs_mrsf()
         if dbg: print t
-    if True: print ""
     print " (%.3f seconds)\n" %(time.time()-startTime)
+    print ""
     
-    if True: print "remove near zero terms"
-    startTime = time.time()
+    if dbg: print "remove near zero terms"
+    if dbg: startTime = time.time()
     sqa.termChop(ov_tmp3)
     if True: 
         for t in ov_tmp3:
             print t
         print ""
-    print " (%.3f seconds)\n" %(time.time()-startTime)
+    print ""
+    if dbg: print " (%.3f seconds)\n" %(time.time()-startTime)
 
-    if dbg: 
+    if False: 
       print ""
       if True: print "Combine terms"
       sqa.combineTerms(ov_tmp3)
@@ -592,68 +561,26 @@ def overlap(bra, ops, ket, dbg=False):
     return ov_tmp3
 
 
-    #    normal order form
-    if True: print "normal Order for maximum contraction form"
-    startTime = time.time()
-    ov_tmp2= []
-    i = 0
-    for t in ov_tmp:
-        i += 1
-        if dbg: print "%d / %d "%(i, len(ov_tmp))
-        term = sqa.normalOrder_maxcontraction( t )
-        for tn in term:
-            if dbg: print tn
-        ov_tmp2 += term
-    print " (%.3f seconds)\n" %(time.time()-startTime)
-
-    #TODO: remove terms by vacuumFermi in sqaSLee
-    if True: print "remove delta_{tu} and delta"
-    startTime = time.time()
-    ov_tmp3= []
-    for t in ov_tmp2:
-        tn = sqa.vacuumFermi( t )
-        if dbg: print tn 
-        ov_tmp3.append( tn )
-    if dbg: print ""
-    print " (%.3f seconds)\n" %(time.time()-startTime)
-
-    if True: print "contract form"
-    startTime = time.time()
-    for t in ov_tmp3:
-        t.contractDeltaFuncs_konst()
-        if dbg: print t
-    if True: print ""
-    print " (%.3f seconds)\n" %(time.time()-startTime)
-    
-    if True: print "remove near zero terms"
-    startTime = time.time()
-    sqa.termChop(ov_tmp3)
-    if True: 
-        for t in ov_tmp3:
-            print t
-        print ""
-    print " (%.3f seconds)\n" %(time.time()-startTime)
-
 if __name__ == '__main__':
-    dbg = True 
+    dbg = False
     S  = 0
     Ms = 0
     w00_ket  = [] # |MRSF(0,0)> : S=0, Ms=0 MRSF ket vector 
-    w00_ket += genCSF([2,2,0,0], S, Ms, ket=True)   # G 
-    w00_ket += genCSF([2,0,2,0], S, Ms, ket=True)   # D 
-    w00_ket += genCSF([2,1,1,0], S, Ms, ket=True)   # LR 
     w00_ket += genCSF([1,2,1,0], S, Ms, ket=True)   # CO1 
+    w00_ket += genCSF([2,1,1,0], S, Ms, ket=True)   # LR1 / LR2
+    w00_ket += genCSF([2,2,0,0], S, Ms, ket=True)   # G 
     w00_ket += genCSF([1,1,2,0], S, Ms, ket=True)   # CO2
+    w00_ket += genCSF([2,0,2,0], S, Ms, ket=True)   # D 
     w00_ket += genCSF([2,0,1,1], S, Ms, ket=True)   # O1V
     w00_ket += genCSF([2,1,0,1], S, Ms, ket=True)   # O2V
 #    w00_ket += genCSF([1,1,1,1], S, Ms, ket=True)   # CV
 
     w00_bra  = [] # <MRSF(0,0)| : S=0, Ms=0 MRSF bra vector 
-    w00_bra += genCSF([2,2,0,0], S, Ms, bra=True)   # G O1
-    w00_bra += genCSF([2,0,2,0], S, Ms, bra=True)   # D O2
-    w00_bra += genCSF([2,1,1,0], S, Ms, bra=True)   # LRO1 / O2-O2
     w00_bra += genCSF([1,2,1,0], S, Ms, bra=True)   # CO1 
+    w00_bra += genCSF([2,1,1,0], S, Ms, bra=True)   # LR1 / LR2
+    w00_bra += genCSF([2,2,0,0], S, Ms, bra=True)   # G O1
     w00_bra += genCSF([1,1,2,0], S, Ms, bra=True)   # CO2
+    w00_bra += genCSF([2,0,2,0], S, Ms, bra=True)   # D O2
     w00_bra += genCSF([2,0,1,1], S, Ms, bra=True)   # O1V
     w00_bra += genCSF([2,1,0,1], S, Ms, bra=True)   # O2V 
 #    w00_bra += genCSF([1,1,1,1], S, Ms, bra=True)   # CV
@@ -661,55 +588,55 @@ if __name__ == '__main__':
     S  = 1 
     Ms = 0
     w10_ket  = [] # |MRSF(1,0)> : S=1, Ms=0 MRSF ket vector 
-    w10_ket += genCSF([2,1,1,0], S, Ms, ket=True)   # O1-O1 / O2-O2
-    w10_ket += genCSF([1,2,1,0], S, Ms, ket=True)   # C-O1 
-    w10_ket += genCSF([1,1,2,0], S, Ms, ket=True)   # C-O2
-    w10_ket += genCSF([2,0,1,1], S, Ms, ket=True)   # O1-V
-    w10_ket += genCSF([2,1,0,1], S, Ms, ket=True)   # O2-V
-#    w10_ket += genCSF([1,1,1,1], S, Ms, ket=True)   # C-V
+    w10_ket += genCSF([1,2,1,0], S, Ms, ket=True)   # CO1 
+    w10_ket += genCSF([2,1,1,0], S, Ms, ket=True)   # LR1 / LR2
+    w10_ket += genCSF([1,1,2,0], S, Ms, ket=True)   # CO2
+    w10_ket += genCSF([2,0,1,1], S, Ms, ket=True)   # O1V
+    w10_ket += genCSF([2,1,0,1], S, Ms, ket=True)   # O2V
+#    w10_ket += genCSF([1,1,1,1], S, Ms, ket=True)   # CV
 
     w10_bra  = [] # <MRSF(1,0)| : S=1, Ms=0 MRSF bra vector 
-    w10_bra += genCSF([2,1,1,0], S, Ms, bra=True)   # O1-O1 / O2-O2
-    w10_bra += genCSF([1,2,1,0], S, Ms, bra=True)   # C-O1 
-    w10_bra += genCSF([1,1,2,0], S, Ms, bra=True)   # C-O2
-    w10_bra += genCSF([2,0,1,1], S, Ms, bra=True)   # O1-V
-    w10_bra += genCSF([2,1,0,1], S, Ms, bra=True)   # O2-V 
-#    w10_bra += genCSF([1,1,1,1], S, Ms, bra=True)   # C-V
+    w10_bra += genCSF([1,2,1,0], S, Ms, bra=True)   # CO1 
+    w10_bra += genCSF([2,1,1,0], S, Ms, bra=True)   # LR1 / LR2
+    w10_bra += genCSF([1,1,2,0], S, Ms, bra=True)   # CO2
+    w10_bra += genCSF([2,0,1,1], S, Ms, bra=True)   # O1V
+    w10_bra += genCSF([2,1,0,1], S, Ms, bra=True)   # O2V 
+#    w10_bra += genCSF([1,1,1,1], S, Ms, bra=True)   # CV
 
     S  = 1 
     Ms =+1
     w1p1_ket  = [] # |MRSF(1,0)> : S=1, Ms=1 MRSF ket vector 
-    w1p1_ket += genCSF([2,1,1,0], S, Ms, ket=True)   # O1-O1 / O2-O2
-    w1p1_ket += genCSF([1,2,1,0], S, Ms, ket=True)   # C-O1 
-    w1p1_ket += genCSF([1,1,2,0], S, Ms, ket=True)   # C-O2
-    w1p1_ket += genCSF([2,0,1,1], S, Ms, ket=True)   # O1-V
-    w1p1_ket += genCSF([2,1,0,1], S, Ms, ket=True)   # O2-V
+    w1p1_ket += genCSF([1,2,1,0], S, Ms, ket=True)   # CO1 
+    w1p1_ket += genCSF([2,1,1,0], S, Ms, ket=True)   # LR1 / LR2
+    w1p1_ket += genCSF([1,1,2,0], S, Ms, ket=True)   # CO2
+    w1p1_ket += genCSF([2,0,1,1], S, Ms, ket=True)   # O1V
+    w1p1_ket += genCSF([2,1,0,1], S, Ms, ket=True)   # O2V
 
     w1p1_bra  = [] # <MRSF(1,0)| : S=1, Ms=1 MRSF bra vector 
-    w1p1_bra += genCSF([2,1,1,0], S, Ms, bra=True)   # O1-O1 / O2-O2
-    w1p1_bra += genCSF([1,2,1,0], S, Ms, bra=True)   # C-O1 
-    w1p1_bra += genCSF([1,1,2,0], S, Ms, bra=True)   # C-O2
-    w1p1_bra += genCSF([2,0,1,1], S, Ms, bra=True)   # O1-V
-    w1p1_bra += genCSF([2,1,0,1], S, Ms, bra=True)   # O2-V 
+    w1p1_bra += genCSF([1,2,1,0], S, Ms, bra=True)   # CO1 
+    w1p1_bra += genCSF([2,1,1,0], S, Ms, bra=True)   # LR1 / LR2
+    w1p1_bra += genCSF([1,1,2,0], S, Ms, bra=True)   # CO2
+    w1p1_bra += genCSF([2,0,1,1], S, Ms, bra=True)   # O1V
+    w1p1_bra += genCSF([2,1,0,1], S, Ms, bra=True)   # O2V 
 
     S  = 1 
     Ms =-1
     w1m1_ket  = [] # |MRSF(1,0)> : S=1, Ms=-1 MRSF ket vector 
-    w1m1_ket += genCSF([2,1,1,0], S, Ms, ket=True)   # O1-O1 / O2-O2
-    w1m1_ket += genCSF([1,2,1,0], S, Ms, ket=True)   # C-O1 
-    w1m1_ket += genCSF([1,1,2,0], S, Ms, ket=True)   # C-O2
-    w1m1_ket += genCSF([2,0,1,1], S, Ms, ket=True)   # O1-V
-    w1m1_ket += genCSF([2,1,0,1], S, Ms, ket=True)   # O2-V
+    w1m1_ket += genCSF([1,2,1,0], S, Ms, ket=True)   # CO1 
+    w1m1_ket += genCSF([2,1,1,0], S, Ms, ket=True)   # LR1 / LR2
+    w1m1_ket += genCSF([1,1,2,0], S, Ms, ket=True)   # CO2
+    w1m1_ket += genCSF([2,0,1,1], S, Ms, ket=True)   # O1V
+    w1m1_ket += genCSF([2,1,0,1], S, Ms, ket=True)   # O2V
 
     w1m1_bra  = [] # <MRSF(1,0)| : S=1, Ms=-1 MRSF bra vector 
-    w1m1_bra += genCSF([2,1,1,0], S, Ms, bra=True)   # O1-O1 / O2-O2
-    w1m1_bra += genCSF([1,2,1,0], S, Ms, bra=True)   # C-O1 
-    w1m1_bra += genCSF([1,1,2,0], S, Ms, bra=True)   # C-O2
-    w1m1_bra += genCSF([2,0,1,1], S, Ms, bra=True)   # O1-V
-    w1m1_bra += genCSF([2,1,0,1], S, Ms, bra=True)   # O2-V
+    w1m1_bra += genCSF([1,2,1,0], S, Ms, bra=True)   # CO1 
+    w1m1_bra += genCSF([2,1,1,0], S, Ms, bra=True)   # LR1 / LR2
+    w1m1_bra += genCSF([1,1,2,0], S, Ms, bra=True)   # CO2
+    w1m1_bra += genCSF([2,0,1,1], S, Ms, bra=True)   # O1V
+    w1m1_bra += genCSF([2,1,0,1], S, Ms, bra=True)   # O2V
 
 
-    if False: 
+    if dbg: 
         print "w00_ket"
         for t in w00_ket:
             print t
@@ -726,16 +653,21 @@ if __name__ == '__main__':
         for t in w10_bra:
             print t
         print ""
+        print "w1p1_ket"
+        for t in w1p1_ket:
+            print t
+        print ""
+        print "w1p1_bra"
+        for t in w1p1_bra:
+            print t
+        print ""
 
-##### Sanity check
 #
+#  S00 = <MRSF(0,0) | MRSF(0,0)>
 #
-#  S00 = <MRSF(0,0) | MRSF(0,0)> 
-#
-#    print "SDTDM <00|00>"
-#    ops = []
-#    S00 = overlap(w00_bra, ops, w00_ket, dbg=0)
-#
+    print "SDTDM <MRSF(0,0) | MRSF(0,0)>"
+    ops = []
+    S00 = overlap(w00_bra, ops, w00_ket, dbg=0)
 #
 #  T00 = <MRSF(0,0) | MRSF(1,0)> = 0
 #
@@ -743,13 +675,11 @@ if __name__ == '__main__':
 #    ops = []
 #    T00 = overlap(w00_bra, ops, w10_ket, dbg=0)
 #
-#
 #  T01 = <MRSF(0,0) | MRSF(1,1)> = 0
 #
 #    print "SDTDM <00|11>"
 #    ops = []
 #    T01 = overlap(w00_bra, ops, w1p1_ket, dbg=0)
-#
 #
 #  T0m1 = <MRSF(0,0) | MRSF(1,-1)> = 0
 #
@@ -757,20 +687,17 @@ if __name__ == '__main__':
 #    ops = []
 #    T0m1 = overlap(w00_bra, ops, w1m1_ket, dbg=0)
 #
-#
-#  T110 = <MRSF(1,0) | MRSF(1,0)>
+#  T110 = <MRSF(1,0) | MRSF(1,0)> 
 #
 #    print "SDTDM <10|10>"
 #    ops = []
 #    T110 = overlap(w10_bra, ops, w10_ket, dbg=0)
 #
-#
 #  T11 = <MRSF(1,0) | MRSF(1,1)> = 0
 #
-#    print "SDTDM <10|11>"
+ #   print "SDTDM <10|11>"
 #    ops = []
 #    T11 = overlap(w10_bra, ops, w1p1_ket, dbg=0)
-#
 #
 #  T1m1 = <MRSF(1,0) | MRSF(1,-1)> = 0
 #
@@ -778,21 +705,8 @@ if __name__ == '__main__':
 #    ops = []
 #    T1m1 = overlap(w10_bra, ops, w1m1_ket, dbg=0)
 #
-#
-#  T111 = <MRSF(1,1) | MRSF(1,1)>
-#
-#    print "SDTDM <11|11>"
-#    ops = []
-#    T111 = overlap(w1p1_bra, ops, w1p1_ket, dbg=0)
-#
-#
-#  T11m1 = <MRSF(1,1) | MRSF(1,-1)>
-#
-#    print "SDTDM <11|1-1>"
-#    ops = []
-#    T11m1 = overlap(w1p1_bra, ops, w1m1_ket, dbg=0)
-#
-###### Spin-dependent transition density matrixs
+#############################################################
+
 #
 #  S00aa = <MRSF(0,0)| a^+_{u alpha} a_{t alpha} |MRSF(0,0)>
 #
