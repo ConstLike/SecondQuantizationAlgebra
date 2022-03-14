@@ -1,6 +1,4 @@
 import secondQuantizationAlgebra as sqa
-from sqaTensor import tensor, kroneckerDelta, creOp, desOp, sfExOp
-from sqaOptions import options
 import math 
 import time
 
@@ -301,15 +299,9 @@ def genCSF(string, S, Ms, bra=False, ket=False):
             X = [sqa.tensor('X_LR1       ', [O1b,O1a], [])]
             Op= [O2a_cre, O1a_cre, Ccb_cre, Cca_cre]
             terms.append(sqa.term(CGcoeff,[],X+Op))
-            X = [sqa.tensor('X_LR2       ', [O2b,O2a], [])]
-            Op= [O2b_cre, O1b_cre, Ccb_cre, Cca_cre]
-            terms.append(sqa.term(CGcoeff,[],X+Op))
         elif bra:
             X = [sqa.tensor('X*_LR1      ', [O1b,O1a], [])]
             Op= [Cca_des, Ccb_des, O1a_des, O2a_des]
-            terms.append(sqa.term(CGcoeff,[],X+Op))
-            X = [sqa.tensor('X*_LR2      ', [O2b,O2a], [])]
-            Op= [Cca_des, Ccb_des, O1b_des, O2b_des]
             terms.append(sqa.term(CGcoeff,[],X+Op))
     #CO1
     elif nc1 == 1 and nc2 == 2 and nv1 == 1 and nv2 == 0:
@@ -317,15 +309,9 @@ def genCSF(string, S, Ms, bra=False, ket=False):
         terms = []
         if ket:
             X = [sqa.tensor('X_jO1 sum_j ', [Cia,O1b], [])]
-            Op= [O2b_cre, O1a_cre, Cjb_cre, O1b_cre]
-            terms.append(sqa.term(CGcoeff,[],X+Op))
-            X = [sqa.tensor('X_jO1 sum_j ', [Cia,O1b], [])]
             Op= [O2a_cre, O1b_cre, O1a_cre, Cja_cre]
             terms.append(sqa.term(CGcoeff,[],X+Op))
         elif bra:
-            X = [sqa.tensor('X*_iO1 sum_i', [Cia,O1b], [])]
-            Op= [O1b_des, Cib_des, O1a_des, O2b_des]
-            terms.append(sqa.term(CGcoeff,[],X+Op))
             X = [sqa.tensor('X*_iO1 sum_i', [Cia,O1b], [])]
             Op= [Cia_des, O1a_des, O1b_des, O2a_des]
             terms.append(sqa.term(CGcoeff,[],X+Op))
@@ -337,15 +323,9 @@ def genCSF(string, S, Ms, bra=False, ket=False):
             X = [sqa.tensor('X_jO2 sum_j ', [Cia,O2b], [])]
             Op= [O2a_cre, O1a_cre, Cja_cre, O2b_cre] 
             terms.append(sqa.term(CGcoeff,[],X+Op))
-            X = [sqa.tensor('X_jO2 sum_j ', [Cia,O2b], [])]
-            Op= [O2b_cre, O1b_cre, O2a_cre, Cjb_cre] 
-            terms.append(sqa.term(CGcoeff,[],X+Op))
         elif bra:
             X = [sqa.tensor('X*_iO2 sum_i', [Cia,O2b], [])]
             Op= [O2b_des, Cia_des, O1a_des, O2a_des]
-            terms.append(sqa.term(CGcoeff,[],X+Op))
-            X = [sqa.tensor('X*_iO2 sum_i', [Cia,O2b], [])]
-            Op= [Cib_des, O2a_des, O1b_des, O2b_des]
             terms.append(sqa.term(CGcoeff,[],X+Op))
     #O1V
     elif nc1 == 2 and nc2 == 0 and nv1 == 1 and nv2 == 1:
@@ -355,15 +335,9 @@ def genCSF(string, S, Ms, bra=False, ket=False):
             X = [sqa.tensor('X_O1b sum_b ', [O1a,Vab], [])]
             Op= [O2a_cre, Vba_cre, Ccb_cre, Cca_cre] 
             terms.append(sqa.term(CGcoeff,[],X+Op))
-            X = [sqa.tensor('X_O1b sum_b ', [O1a,Vab], [])]
-            Op= [O2b_cre, Vbb_cre, Ccb_cre, Cca_cre] 
-            terms.append(sqa.term(CGcoeff,[],X+Op))
         elif bra:
             X = [sqa.tensor('X*_O1a sum_a', [O1a,Vab], [])]
             Op= [Cca_des, Ccb_des, Vaa_des, O2a_des]
-            terms.append(sqa.term(CGcoeff,[],X+Op))
-            X = [sqa.tensor('X*_O1a sum_a', [O1a,Vab], [])]
-            Op= [Cca_des, Ccb_des, Vab_des, O2b_des]
             terms.append(sqa.term(CGcoeff,[],X+Op))
     #O2V
     elif nc1 == 2 and nc2 == 1 and nv1 == 0 and nv2 == 1:
@@ -373,16 +347,10 @@ def genCSF(string, S, Ms, bra=False, ket=False):
             X = [sqa.tensor('X_O2b sum_b ', [O2a,Vab], [])]
             Op= [Vba_cre, O1a_cre, Ccb_cre, Cca_cre]
             terms.append(sqa.term(CGcoeff,[],X+Op))
-            X = [sqa.tensor('X_O2b sum_b ', [O2a,Vab], [])]
-            Op= [Vbb_cre, O1b_cre, Ccb_cre, Cca_cre]
-            terms.append(sqa.term(CGcoeff,[],X+Op))
         elif bra:
             X = [sqa.tensor('X*_O2a sum_a', [O2a,Vab], [])]
             Op= [Cca_des, Ccb_des, O1a_des, Vaa_des]
-            terms.append(sqa.term((+1.0)*CGcoeff,[],X+Op))
-            X = [sqa.tensor('X*_O2a sum_a', [O2a,Vab], [])]
-            Op= [Cca_des, Ccb_des, O1b_des, Vab_des]
-            terms.append(sqa.term((+1.0)*CGcoeff,[],X+Op))
+            terms.append(sqa.term(CGcoeff,[],X+Op))
 
   elif (S == 1 and Ms ==-1):                               # Triplet Ms = -1
     #L,R
@@ -393,15 +361,9 @@ def genCSF(string, S, Ms, bra=False, ket=False):
             X = [sqa.tensor('X_LR1       ', [O1b,O1a], [])]
             Op= [O2b_cre, O1b_cre, Ccb_cre, Cca_cre]
             terms.append(sqa.term(CGcoeff,[],X+Op))
-            X = [sqa.tensor('X_LR2       ', [O2b,O2a], [])]
-            Op= [O2a_cre, O1a_cre, Ccb_cre, Cca_cre]
-            terms.append(sqa.term(CGcoeff,[],X+Op))
         elif bra:
             X = [sqa.tensor('X*_LR1      ', [O1b,O1a], [])]
             Op= [Cca_des, Ccb_des, O1b_des, O2b_des]
-            terms.append(sqa.term(CGcoeff,[],X+Op))
-            X = [sqa.tensor('X*_LR2      ', [O2b,O2a], [])]
-            Op= [Cca_des, Ccb_des, O1a_des, O2a_des]
             terms.append(sqa.term(CGcoeff,[],X+Op))
     #CO1
     elif nc1 == 1 and nc2 == 2 and nv1 == 1 and nv2 == 0:
@@ -409,15 +371,9 @@ def genCSF(string, S, Ms, bra=False, ket=False):
         terms = []
         if ket:
             X = [sqa.tensor('X_jO1 sum_j ', [Cia,O1b], [])]
-            Op= [O2a_cre, O1b_cre, O1a_cre, Cja_cre]
-            terms.append(sqa.term(CGcoeff,[],X+Op))
-            X = [sqa.tensor('X_jO1 sum_j ', [Cia,O1b], [])]
             Op= [O2b_cre, O1a_cre, Cjb_cre, O1b_cre]
             terms.append(sqa.term(CGcoeff,[],X+Op))
         elif bra:
-            X = [sqa.tensor('X*_iO1 sum_i', [Cia,O1b], [])]
-            Op= [Cia_des, O1a_des, O1b_des, O2a_des] 
-            terms.append(sqa.term(CGcoeff,[],X+Op))
             X = [sqa.tensor('X*_iO1 sum_i', [Cia,O1b], [])]
             Op= [O1b_des, Cib_des, O1a_des, O2b_des]
             terms.append(sqa.term(CGcoeff,[],X+Op))
@@ -429,15 +385,9 @@ def genCSF(string, S, Ms, bra=False, ket=False):
             X = [sqa.tensor('X_jO2 sum_j ', [Cia,O2b], [])]
             Op= [O2b_cre, O1b_cre, O2a_cre, Cjb_cre] 
             terms.append(sqa.term(CGcoeff,[],X+Op))
-            X = [sqa.tensor('X_jO2 sum_j ', [Cia,O2b], [])]
-            Op= [O2a_cre, O1a_cre, Cja_cre, O2b_cre] 
-            terms.append(sqa.term(CGcoeff,[],X+Op))
         elif bra:
             X = [sqa.tensor('X*_iO2 sum_i', [Cia,O2b], [])]
             Op= [Cib_des, O2a_des, O1b_des, O2b_des]
-            terms.append(sqa.term(CGcoeff,[],X+Op))
-            X = [sqa.tensor('X*_iO2 sum_i', [Cia,O2b], [])]
-            Op= [O2b_des, Cia_des, O1a_des, O2a_des]
             terms.append(sqa.term(CGcoeff,[],X+Op))
     #O1V
     elif nc1 == 2 and nc2 == 0 and nv1 == 1 and nv2 == 1:
@@ -447,15 +397,9 @@ def genCSF(string, S, Ms, bra=False, ket=False):
             X = [sqa.tensor('X_O1b sum_b ', [O1a,Vab], [])]
             Op= [O2b_cre, Vbb_cre, Ccb_cre, Cca_cre] 
             terms.append(sqa.term(CGcoeff,[],X+Op))
-            X = [sqa.tensor('X_O1b sum_b ', [O1a,Vab], [])]
-            Op= [O2a_cre, Vba_cre, Ccb_cre, Cca_cre] 
-            terms.append(sqa.term(CGcoeff,[],X+Op))
         elif bra:
             X = [sqa.tensor('X*_O1a sum_a', [O1a,Vab], [])]
             Op= [Cca_des, Ccb_des, Vab_des, O2b_des]
-            terms.append(sqa.term(CGcoeff,[],X+Op))
-            X = [sqa.tensor('X*_O1a sum_a', [O1a,Vab], [])]
-            Op= [Cca_des, Ccb_des, Vaa_des, O2a_des]
             terms.append(sqa.term(CGcoeff,[],X+Op))
     #O2V
     elif nc1 == 2 and nc2 == 1 and nv1 == 0 and nv2 == 1:
@@ -465,16 +409,10 @@ def genCSF(string, S, Ms, bra=False, ket=False):
             X = [sqa.tensor('X_O2b sum_b ', [O2a,Vab], [])]
             Op= [Vbb_cre, O1b_cre, Ccb_cre, Cca_cre]
             terms.append(sqa.term(CGcoeff,[],X+Op))
-            X = [sqa.tensor('X_O2b sum_b ', [O2a,Vab], [])]
-            Op= [Vba_cre, O1a_cre, Ccb_cre, Cca_cre]
-            terms.append(sqa.term(CGcoeff,[],X+Op))
         elif bra:
             X = [sqa.tensor('X*_O2a sum_a', [O2a,Vab], [])]
             Op= [Cca_des, Ccb_des, O1b_des, Vab_des]
-            terms.append(sqa.term((+1.0)*CGcoeff,[],X+Op))
-            X = [sqa.tensor('X*_O2a sum_a', [O2a,Vab], [])]
-            Op= [Cca_des, Ccb_des, O1a_des, Vaa_des]
-            terms.append(sqa.term((+1.0)*CGcoeff,[],X+Op))
+            terms.append(sqa.term(CGcoeff,[],X+Op))
   return terms 
 
 def overlap(bra, ops, ket, dbg=False):
@@ -665,9 +603,9 @@ if __name__ == '__main__':
 #
 #  S00 = <MRSF(0,0) | MRSF(0,0)>
 #
-    print "SDTDM <MRSF(0,0) | MRSF(0,0)>"
-    ops = []
-    S00 = overlap(w00_bra, ops, w00_ket, dbg=0)
+#    print "SDTDM <MRSF(0,0) | MRSF(0,0)>"
+#    ops = []
+#    S00 = overlap(w00_bra, ops, w00_ket, dbg=0)
 #
 #  T00 = <MRSF(0,0) | MRSF(1,0)> = 0
 #
@@ -695,7 +633,7 @@ if __name__ == '__main__':
 #
 #  T11 = <MRSF(1,0) | MRSF(1,1)> = 0
 #
- #   print "SDTDM <10|11>"
+#    print "SDTDM <10|11>"
 #    ops = []
 #    T11 = overlap(w10_bra, ops, w1p1_ket, dbg=0)
 #
@@ -780,7 +718,7 @@ if __name__ == '__main__':
 #    T01bb = overlap(w00_bra, ops, w1p1_ket, dbg=0)
 
 #
-#  T01ab = <MRSF(0,0)| a^+_{u beta} a_{t alpha} |MRSF(1,1)> = -sqrt(2) * <MRSF(0,0)| a^+_{u alpha} a_{t alpha} |MRSF(1,0)>
+#  T01ab = <MRSF(0,0)| a^+_{u beta} a_{t alpha} |MRSF(1,1)> = -sqrt(2) * T00aa
 #
 #    print "SDTDM <00|a^+_ub a_ta|11>"
 #    ops = [t_ub_cre, t_ta_des]
@@ -795,7 +733,7 @@ if __name__ == '__main__':
 #    T01ab_eq_sqrt2_T00aa = overlap(w00_bra, ops, w10_ket, dbg=0)
 
 #
-#  T01ba = <MRSF(0,0)| a^+_{u alpha} a_{t beta} |MRSF(1,1)> = - T01ab
+#  T01ba = <MRSF(0,0)| a^+_{u alpha} a_{t beta} |MRSF(1,1)> = 0
 #
 #    print "SDTDM <00|a^+_ua a_tb|11>"
 #    ops = [t_ua_cre, t_tb_des]
@@ -817,14 +755,14 @@ if __name__ == '__main__':
 #    T0m1bb = overlap(w00_bra, ops, w1m1_ket, dbg=0)
 
 #
-#  T0m1ab = <MRSF(0,0)| a^+_{u beta} a_{t alpha} |MRSF(1,-1)> = T01ab
+#  T0m1ab = <MRSF(0,0)| a^+_{u beta} a_{t alpha} |MRSF(1,-1)> = 0
 #
 #    print "SDTDM <00|a^+_ub a_ta|1-1>"
 #    ops = [t_ub_cre, t_ta_des]
 #    T0m1ab = overlap(w00_bra, ops, w1m1_ket, dbg=0)
 
 #
-#  T0m1ba = <MRSF(0,0)| a^+_{u alpha} a_{t beta} |MRSF(1,-1)> = - T01ab
+#  T0m1ba = <MRSF(0,0)| a^+_{u alpha} a_{t beta} |MRSF(1,-1)> = sqrt(2) * T00aa
 #
 #    print "SDTDM <00|a^+_ua a_tb|1-1>"
 #    ops = [t_ua_cre, t_tb_des]
@@ -881,16 +819,8 @@ if __name__ == '__main__':
 #    ops = [t_ub_cre, t_ta_des]
 #    T11ab = overlap(w10_bra, ops, w1p1_ket, dbg=0)
 
-#   WRONG
-#  T11ab_eq_sqrt2_T110aa =/  - sqrt(2) *  <MRSF(1,0)| a^+_{u alpha} a_{t alpha} |MRSF(1,0)> 
 #
-#    t_ua_cre = sqa.term((-1.0)*math.sqrt(2.0),[],[ua_cre])
-#    print "SDTDM sqrt(2) * <10|a^+_ua a_ta|10>"
-#    ops = [t_ua_cre, t_ta_des]
-#    T11ab_eq_sqrt2_T110aa = overlap(w10_bra, ops, w10_ket, dbg=0)
-
-#
-#  T11ba = <MRSF(1,0)| a^+_{u alpha} a_{t beta} |MRSF(1,1)> = T11ab
+#  T11ba = <MRSF(1,0)| a^+_{u alpha} a_{t beta} |MRSF(1,1)> = 0
 #
 #    print "SDTDM <10|a^+_ua a_tb|11>"
 #    ops = [t_ua_cre, t_tb_des]
@@ -913,7 +843,7 @@ if __name__ == '__main__':
 #    T1m1bb = overlap(w10_bra, ops, w1m1_ket, dbg=0)
 
 #
-#  T1m1ab = <MRSF(1,0)| a^+_{u beta} a_{t alpha} |MRSF(1,-1)> = T11ab
+#  T1m1ab = <MRSF(1,0)| a^+_{u beta} a_{t alpha} |MRSF(1,-1)> = 0
 #
 #    print "SDTDM <10|a^+_ub a_ta|1-1>"
 #    ops = [t_ub_cre, t_ta_des]
@@ -928,27 +858,33 @@ if __name__ == '__main__':
 #######################################
 
 #
-#  T111aa = <MRSF(1,1)| a^+_{u alpha} a_{t alpha} |MRSF(1,1)>
+#  T111aa = <MRSF(1,1)| a^+_{u alpha} a_{t alpha} |MRSF(1,1)>  = T110aa + 1/sqrt(2) * T11ab
 #
 #    print "SDTDM <11|a^+_ua a_ta|11>"
 #    ops = [t_ua_cre, t_ta_des]
 #    T111aa = overlap(w1p1_bra, ops, w1p1_ket, dbg=0)
 
 #
-#  T111aa_eq_2_T110aa =  2 *  <MRSF(1,0)| a^+_{u alpha} a_{t alpha} |MRSF(1,0)> 
+#  T111aa_eq_T110aa_T11ab = <MRSF(1,0)| a^+_{u alpha} a_{t alpha} |MRSF(1,0)> + 1/sqrt(2) *  <MRSF(1,0)| a^+_{u beta} a_{t alpha} |MRSF(1,1)> 
 #
-#    t_ua_cre = sqa.term((+2.0),[],[ua_cre])
-#    print "SDTDM  2 * <10|a^+_ua a_ta|10>"
-#    ops = [t_ua_cre, t_ta_des]
-#    T111aa_eq_2_T110aa = overlap(w10_bra, ops, w10_ket, dbg=0)
+#    t_ub_cre = sqa.term((1.0)/math.sqrt(2.0),[],[ub_cre])
+#    print "SDTDM 1/sqrt(2) * <10|a^+_ub a_ta|11>"
+#    ops = [t_ub_cre, t_ta_des]
+#    T111aa_eq_T110aa_T11ab = overlap(w10_bra, ops, w1p1_ket, dbg=0)
 
 #
-#  T111bb =  <MRSF(1,1)| a^+_{u beta} a_{t beta} |MRSF(1,1)> = T111aa
+#  T111bb =  <MRSF(1,1)| a^+_{u beta} a_{t beta} |MRSF(1,1)> = T110aa - 1/sqrt(2) * T11ab
 #
 #    print "SDTDM <11|a^+_ub a_tb|11>"
 #    ops = [t_ub_cre, t_tb_des]
 #    T111bb = overlap(w1p1_bra, ops, w1p1_ket, dbg=0)
 
+#  T111bb_eq_T110aa_T11ab = <MRSF(1,0)| a^+_{u alpha} a_{t alpha} |MRSF(1,0)> - 1/sqrt(2) *  <MRSF(1,0)| a^+_{u beta} a_{t alpha} |MRSF(1,1)> 
+#
+#    t_ub_cre = sqa.term((-1.0)/math.sqrt(2.0),[],[ub_cre])
+#    print "SDTDM -1/sqrt(2) * <10|a^+_ub a_ta|11>"
+#    ops = [t_ub_cre, t_ta_des]
+#    T111bb_eq_T110aa_T11ab = overlap(w10_bra, ops, w1p1_ket, dbg=0)
 #
 #  T111ab = <MRSF(1,1)| a^+_{u beta} a_{t alpha} |MRSF(1,1)> = 0
 #
@@ -957,7 +893,7 @@ if __name__ == '__main__':
 #    T111ab = overlap(w1p1_bra, ops, w1p1_ket, dbg=0)
 
 #
-##  T111ba = <MRSF(1,1)| a^+_{u alpha} a_{t beta} |MRSF(1,1)> = 0
+#  T111ba = <MRSF(1,1)| a^+_{u alpha} a_{t beta} |MRSF(1,1)> = 0
 #
 #    print "SDTDM <11|a^+_ua a_tb|11>"
 #    ops = [t_ua_cre, t_tb_des]
@@ -965,14 +901,14 @@ if __name__ == '__main__':
 #############################################################
 
 #
-#  T11m1aa = <MRSF(1,1)| a^+_{u alpha} a_{t alpha} |MRSF(1-,1)> = T111aa
+#  T11m1aa = <MRSF(1,1)| a^+_{u alpha} a_{t alpha} |MRSF(1,-1)> = 0
 #
 #    print "SDTDM <11|a^+_ua a_ta|1-1>"
 #    ops = [t_ua_cre, t_ta_des]
 #    T11m1aa = overlap(w1p1_bra, ops, w1m1_ket, dbg=0)
 
 #
-#  T11m1bb =  <MRSF(1,1)| a^+_{u beta} a_{t beta} |MRSF(1,-1)> = T111aa
+#  T11m1bb =  <MRSF(1,1)| a^+_{u beta} a_{t beta} |MRSF(1,-1)> = 0
 #
 #    print "SDTDM <11|a^+_ub a_tb|1-1>"
 #    ops = [t_ub_cre, t_tb_des]
@@ -992,6 +928,181 @@ if __name__ == '__main__':
 #    ops = [t_ua_cre, t_tb_des]
 #    T11m1ba = overlap(w1p1_bra, ops, w1m1_ket, dbg=0)
 #############################################################
+
+#
+#  Tm11m1aa = <MRSF(1,-1)| a^+_{u alpha} a_{t alpha} |MRSF(1,-1)> = T110aa - 1/sqrt(2) * T11ab
+#
+#    print "SDTDM <1-1|a^+_ua a_ta|1-1>"
+#    ops = [t_ua_cre, t_ta_des]
+#    Tm11m1aa = overlap(w1m1_bra, ops, w1m1_ket, dbg=0)
+
+#
+#  Tm11m1bb =  <MRSF(1,-1)| a^+_{u beta} a_{t beta} |MRSF(1,-1)> = T110aa + 1/sqrt(2) * T11ab
+#
+#    print "SDTDM <1-1|a^+_ub a_tb|1-1>"
+#    ops = [t_ub_cre, t_tb_des]
+#    Tm11m1bb = overlap(w1m1_bra, ops, w1m1_ket, dbg=0)
+
+#
+#  Tm11m1ab = <MRSF(1,-1)| a^+_{u beta} a_{t alpha} |MRSF(1,-1)> = 0
+#
+#    print "SDTDM <1-1|a^+_ub a_ta|1-1>"
+#    ops = [t_ub_cre, t_ta_des]
+#    Tm11m1ab = overlap(w1m1_bra, ops, w1m1_ket, dbg=0)
+
+#
+#  Tm11m1ba = <MRSF(1,-1)| a^+_{u alpha} a_{t beta} |MRSF(1,-1)> = 0
+#
+#    print "SDTDM <1-1|a^+_ua a_tb|1-1>"
+#    ops = [t_ua_cre, t_tb_des]
+#    Tm11m1ba = overlap(w1m1_bra, ops, w1m1_ket, dbg=0)
+#############################################################
+
+#
+#  T100aa = <MRSF(1,0)| a^+_{u alpha} a_{t alpha} |MRSF(0,0)> = T00aa
+#
+#    print "SDTDM <10|a^+_ua a_ta|00>"
+#    ops = [t_ua_cre, t_ta_des]
+#    T100aa = overlap(w10_bra, ops, w00_ket, dbg=0)
+
+#
+#  T100bb =  <MRSF(1,0)| a^+_{u beta} a_{t beta} |MRSF(0,0)> = - T00aa
+#
+#    print "SDTDM <10|a^+_ub a_tb|00>"
+#    ops = [t_ub_cre, t_tb_des]
+#    T100bb = overlap(w10_bra, ops, w00_ket, dbg=0)
+
+#
+#  T100ab = <MRSF(1,0)| a^+_{u beta} a_{t alpha} |MRSF(0,0)> = 0
+#
+#    print "SDTDM <10|a^+_ub a_ta|00>"
+#    ops = [t_ub_cre, t_ta_des]
+#    T100ab = overlap(w10_bra, ops, w00_ket, dbg=0)
+
+#
+#  T100ba = <MRSF(1,0)| a^+_{u alpha} a_{t beta} |MRSF(0,0)> = 0
+#
+#    print "SDTDM <10|a^+_ua a_tb|00>"
+#    ops = [t_ua_cre, t_tb_des]
+#    T100ba = overlap(w10_bra, ops, w00_ket, dbg=0)
+#############################################################
+
+#
+#  T1100aa = <MRSF(1,1)| a^+_{u alpha} a_{t alpha} |MRSF(0,0)> = 0
+#
+#    print "SDTDM <11|a^+_ua a_ta|00>"
+#    ops = [t_ua_cre, t_ta_des]
+#    T1110aa = overlap(w1p1_bra, ops, w00_ket, dbg=0)
+
+#
+#  T1100bb = <MRSF(1,1)| a^+_{u beta} a_{t beta} |MRSF(0,0)> = 0
+#
+#    print "SDTDM <11|a^+_ub a_tb|00>"
+#    ops = [t_ub_cre, t_tb_des]
+#    T1110bb = overlap(w1p1_bra, ops, w00_ket, dbg=0)
+
+#
+#  T1100ab = <MRSF(1,1)| a^+_{u beta} a_{t alpha} |MRSF(0,0)> = 0 
+#
+#    print "SDTDM <11|a^+_ub a_ta|00>"
+#    ops = [t_ub_cre, t_ta_des]
+#    T1100ab = overlap(w1p1_bra, ops, w00_ket, dbg=0)
+
+#
+#  T1110ba = <MRSF(1,1)| a^+_{u alpha} a_{t beta} |MRSF(0,0)> = -sqrt(2) * T00aa
+#
+#    print "SDTDM <11|a^+_ua a_tb|00>"
+#    ops = [t_ua_cre, t_tb_des]
+#    T1100ba = overlap(w1p1_bra, ops, w00_ket, dbg=0)
+#############################################################
+
+#
+#  T1110aa = <MRSF(1,1)| a^+_{u alpha} a_{t alpha} |MRSF(1,0)> = 0
+#
+#    print "SDTDM <11|a^+_ua a_ta|10>"
+#    ops = [t_ua_cre, t_ta_des]
+#    T1110aa = overlap(w1p1_bra, ops, w10_ket, dbg=0)
+
+#
+#  T1110bb = <MRSF(1,1)| a^+_{u beta} a_{t beta} |MRSF(1,0)> = 0
+#
+#    print "SDTDM <11|a^+_ub a_tb|10>"
+#    ops = [t_ub_cre, t_tb_des]
+#    T1110bb = overlap(w1p1_bra, ops, w10_ket, dbg=0)
+
+#
+#  T1110ab = <MRSF(1,1)| a^+_{u beta} a_{t alpha} |MRSF(1,0)> = 0 
+#
+#    print "SDTDM <11|a^+_ub a_ta|10>"
+#    ops = [t_ub_cre, t_ta_des]
+#    T1110ab = overlap(w1p1_bra, ops, w10_ket, dbg=0)
+
+#
+#  T1110ba = <MRSF(1,1)| a^+_{u alpha} a_{t beta} |MRSF(1,0)> = T11ab 
+#
+#    print "SDTDM <11|a^+_ua a_tb|10>"
+#    ops = [t_ua_cre, t_tb_des]
+#    T1110ba = overlap(w1p1_bra, ops, w10_ket, dbg=0)
+#############################################################
+
+#
+#  T1m100aa = <MRSF(1,-1)| a^+_{u alpha} a_{t alpha} |MRSF(0,0)> = 0
+#
+#    print "SDTDM <1-1|a^+_ua a_ta|00>"
+#    ops = [t_ua_cre, t_ta_des]
+#    T1m110aa = overlap(w1m1_bra, ops, w00_ket, dbg=0)
+
+#
+#  T1m100bb = <MRSF(1,-1)| a^+_{u beta} a_{t beta} |MRSF(0,0)> = 0
+#
+#    print "SDTDM <1-1|a^+_ub a_tb|00>"
+#    ops = [t_ub_cre, t_tb_des]
+#    T1m110bb = overlap(w1m1_bra, ops, w00_ket, dbg=0)
+
+#
+#  T1m100ab = <MRSF(1,-1)| a^+_{u beta} a_{t alpha} |MRSF(0,0)> = sqrt(2) * T00aa
+#
+#   print "SDTDM <1-1|a^+_ub a_ta|00>"
+#   ops = [t_ub_cre, t_ta_des]
+#   T1m100ab = overlap(w1m1_bra, ops, w00_ket, dbg=0)
+
+#
+#  T1m110ba = <MRSF(1,-1)| a^+_{u alpha} a_{t beta} |MRSF(0,0)> = 0
+#
+#    print "SDTDM <1-1|a^+_ua a_tb|00>"
+#    ops = [t_ua_cre, t_tb_des]
+#    T1m100ba = overlap(w1m1_bra, ops, w00_ket, dbg=0)
+#############################################################
+
+#
+#  T1m110aa = <MRSF(1,-1)| a^+_{u alpha} a_{t alpha} |MRSF(1,0)> = 0
+#
+#    print "SDTDM <1-1|a^+_ua a_ta|10>"
+#    ops = [t_ua_cre, t_ta_des]
+#    T1m110aa = overlap(w1m1_bra, ops, w10_ket, dbg=0)
+
+#
+#  T1m110bb = <MRSF(1,-1)| a^+_{u beta} a_{t beta} |MRSF(1,0)> = 0
+#
+#    print "SDTDM <1-1|a^+_ub a_tb|10>"
+#    ops = [t_ub_cre, t_tb_des]
+#    T1m110bb = overlap(w1m1_bra, ops, w10_ket, dbg=0)
+
+#
+#  T1m110ab = <MRSF(1,-1)| a^+_{u beta} a_{t alpha} |MRSF(1,0)> = T11ab
+#
+#    print "SDTDM <1-1|a^+_ub a_ta|10>"
+#    ops = [t_ub_cre, t_ta_des]
+#    T1m110ab = overlap(w1m1_bra, ops, w10_ket, dbg=0)
+
+#
+#  T1m110ba = <MRSF(1,-1)| a^+_{u alpha} a_{t beta} |MRSF(1,0)> = 0
+#
+#    print "SDTDM <1-1|a^+_ua a_tb|10>"
+#    ops = [t_ua_cre, t_tb_des]
+#    T1m110ba = overlap(w1m1_bra, ops, w10_ket, dbg=0)
+#############################################################
+
 #
 #  Tm11aa = <MRSF(1,-1)| a^+_{u alpha} a_{t alpha} |MRSF(1,0)> = 0
 #
@@ -1014,37 +1125,9 @@ if __name__ == '__main__':
 #    Tm11ab = overlap(w1m1_bra, ops, w10_ket, dbg=0)
 
 #
-#  Tm11ba = <MRSF(1,-1)| a^+_{u alpha} a_{t beta} |MRSF(1,0)> = - T11ab
+#  Tm11ba = <MRSF(1,-1)| a^+_{u alpha} a_{t beta} |MRSF(1,0)> = 0
 #
 #    print "SDTDM <1-1|a^+_ua a_tb|10>"
 #    ops = [t_ua_cre, t_tb_des]
 #    Tm11ba = overlap(w1m1_bra, ops, w10_ket, dbg=0)
-#######################################
-#
-#  Tm11m1aa = <MRSF(1,-1)| a^+_{u alpha} a_{t alpha} |MRSF(1,-1)> 
-#
-#    print "SDTDM <1-1|a^+_ua a_ta|1-1>"
-#    ops = [t_ua_cre, t_ta_des]
-#    Tm11m1aa = overlap(w1m1_bra, ops, w1m1_ket, dbg=0)
-
-#
-#  Tm11m1bb =  <MRSF(1,-1)| a^+_{u beta} a_{t beta} |MRSF(1,-1)> = - Tm11m1aa
-#
-#    print "SDTDM <1-1|a^+_ub a_tb|1-1>"
-#    ops = [t_ub_cre, t_tb_des]
-#    Tm11m1bb = overlap(w1m1_bra, ops, w1m1_ket, dbg=0)
-
-#
-#  Tm11m1ab = <MRSF(1,-1)| a^+_{u beta} a_{t alpha} |MRSF(1,-1)> = 0
-#
-#    print "SDTDM <1-1|a^+_ub a_ta|1-1>"
-#    ops = [t_ub_cre, t_ta_des]
-#    Tm11m1ab = overlap(w1m1_bra, ops, w1m1_ket, dbg=0)
-
-#
-#  Tm11m1ba = <MRSF(1,-1)| a^+_{u alpha} a_{t beta} |MRSF(1,-1)> = 0
-#
-#    print "SDTDM <1-1|a^+_ua a_tb|1-1>"
-#    ops = [t_ua_cre, t_tb_des]
-#    Tm11m1ba = overlap(w1m1_bra, ops, w1m1_ket, dbg=0)
-#######################################
+#############################################################
