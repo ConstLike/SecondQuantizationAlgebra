@@ -45,62 +45,62 @@ terms = []
 Op4 = t_ts_ket_2 + t_ops_ket_2 + W_ts_ket_2 + W_ops_ket_2 + W_ts_bra_2 + W_ops_bra_2 + t_ts_bra_2 + t_ops_bra_2
 terms.append( sqa.term( 1.0, [], Op4) )
 
-print "pure"
+print("pure")
 for t in terms:
-    print t
-print ""
+    print(t)
+print("")
 
-print "normal order form"
+print("normal order form")
 Nterms = []
 for t in terms:
     Nterm = sqa.normalOrder( t )
     for tn in Nterm:
-        print tn
+        print(tn)
     Nterms += Nterm
-print ""
+print("")
 
-print "re-obtain spin-free operator"
+print("re-obtain spin-free operator")
 Nterms2 = []
 for t in Nterms:
     tmp = sqa.SpinFree( t )
     Nterms2.append( tmp )
-    print tmp
-print ""
+    print(tmp)
+print("")
 
-print "HF Fermi expectation form"
+print("HF Fermi expectation form")
 result = []
 for t in Nterms2:
     tmp = sqa.HFFermi( t )
     result.append( tmp )
-    print tmp
-print ""
+    print(tmp)
+print("")
 
-print "contract form"
+print("contract form")
 for t in result:
     t.contractDeltaFuncs()
-    print t
-print ""
+    print(t)
+print("")
 
-print "remove near zero terms"
+print("remove near zero terms")
 sqa.termChop(result)
 for t in result:
-    print t
-print ""
+    print(t)
+print("")
 
 #sqa.combineTerms(result, maxThreads = 5)
 sqa.combineTerms(result)
-print "combined terms"
+print("combined terms")
 for t in result:
-    print t
-print ""
+    print(t)
+print("")
 
-print "change idx"
+print("change idx")
 result2 = []
 for t in result:
     tmp = sqa.idxname( t )
     result2.append( tmp )
-    print tmp
-print ""
+    print(tmp)
+print("")
 
 #print "obtain weight factors"
 #result3 = []
@@ -110,10 +110,10 @@ print ""
 #    print tmp
 #print ""
 
-print "non eq idx sort"
+print("non eq idx sort")
 result = sqa.sort_noeqidx_terms ( result2 )
 for t in result:
-    print t
-print ""
+    print(t)
+print("")
 
 

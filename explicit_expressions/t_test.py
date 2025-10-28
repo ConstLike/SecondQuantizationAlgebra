@@ -59,32 +59,32 @@ babaOp = tbaba_ts1 + tbaba_ops1 + W_ts1 + W_ops1 + W_ts2 + W_ops2 + tbaba_ts2 + 
 bbbbOp = tbbbb_ts1 + tbbbb_ops1 + W_ts1 + W_ops1 + W_ts2 + W_ops2 + tbbbb_ts2 + tbbbb_ops2
 
 term_aaaa = sqa.term(1.0, [], aaaaOp)
-print "pure"
-print term_aaaa
-print ""
+print("pure")
+print(term_aaaa)
+print("")
 
-print "normal order form"
+print("normal order form")
 result = sqa.normalOrder( term_aaaa )
 for t in result:
-    print t
-print ""
+    print(t)
+print("")
 
-print "contract form"
+print("contract form")
 for t in result:
     t.contractDeltaFuncs()
-    print t
-print ""
+    print(t)
+print("")
 
-print "remove near zero terms"
+print("remove near zero terms")
 sqa.termChop(result)
 for t in result:
-    print t
-print ""
+    print(t)
+print("")
 
 sqa.combineTerms(result)
-print "combined terms"
+print("combined terms")
 for t in result:
-    print t
-print ""
+    print(t)
+print("")
 
 

@@ -16,6 +16,9 @@
 #   J. Chem. Phys. 130, 124102 (2009)
 
 
+# Python 3 compatibility: cmp() function was removed in Python 3
+def cmp(a, b):
+    return (a > b) - (a < b)
 
 
 # The symmetry class represents a symmetry permutation of a tensor.
@@ -51,9 +54,9 @@ class symmetry:
           tempList.append(elem)
       if not patternError:
         tempList.sort()
-        patternError = ( tempList != range(len(pattern)) )
+        patternError = ( tempList != list(range(len(pattern))) )
     if patternError:
-      raise ValueError, "pattern must be a tuple of contiguous, non-negative integers including zero. They need not be in order."
+      raise ValueError("pattern must be a tuple of contiguous, non-negative integers including zero. They need not be in order.")
     else:
       self.pattern = pattern
     if (factor == 1 or factor == -1) and type(factor) == type(1):
@@ -61,17 +64,48 @@ class symmetry:
     elif type(factor) == type(1) or type(factor) == type(1.0):
       self.factor = float(factor)
     else:
-      raise TypeError, "factor must be a float or an int."
+      raise TypeError("factor must be a float or an int.")
 
   #------------------------------------------------------------------------------------------------
   
   def __cmp__(self,other):
     if not isinstance(other,symmetry):
-      raise TypeError, "can only compare a symmetry object to other symmetry objects"
+      raise TypeError("can only compare a symmetry object to other symmetry objects")
     return cmp(self.pattern,other.pattern)
 
+  # Python 3 compatibility: rich comparison methods based on __cmp__
+  def __lt__(self, other):
+    if not isinstance(other, symmetry):
+      return NotImplemented
+    return self.__cmp__(other) < 0
+
+  def __le__(self, other):
+    if not isinstance(other, symmetry):
+      return NotImplemented
+    return self.__cmp__(other) <= 0
+
+  def __eq__(self, other):
+    if not isinstance(other, symmetry):
+      return False
+    return self.__cmp__(other) == 0
+
+  def __ne__(self, other):
+    if not isinstance(other, symmetry):
+      return True
+    return self.__cmp__(other) != 0
+
+  def __gt__(self, other):
+    if not isinstance(other, symmetry):
+      return NotImplemented
+    return self.__cmp__(other) > 0
+
+  def __ge__(self, other):
+    if not isinstance(other, symmetry):
+      return NotImplemented
+    return self.__cmp__(other) >= 0
+
   #------------------------------------------------------------------------------------------------
-  
+
   def __str__(self):
     retval = str(self.pattern)
     retval += "%15.5e" %self.factor

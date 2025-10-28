@@ -16,8 +16,13 @@
 #   J. Chem. Phys. 130, 124102 (2009)
 
 
+from functools import cmp_to_key
 from sqaOptions import options
 import time
+
+# Python 3 compatibility: cmp() function was removed in Python 3
+def cmp(a, b):
+    return (a > b) - (a < b)
 
 
 #--------------------------------------------------------------------------------------------------
@@ -93,7 +98,7 @@ def get_num_perms(ti,bi):
   x = []
   for i in range(len(ti)):
     x.append([ti[i],bi[i]])
-  x.sort(lambda a,b: cmp(a[1],b[1]))
+  x.sort(key=cmp_to_key(lambda a,b: cmp(a[1],b[1])))
   for i in range(len(x)):
     x[i] = x[i][0]
   i = 0

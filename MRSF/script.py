@@ -417,19 +417,19 @@ def genCSF(string, S, Ms, bra=False, ket=False):
 
 def overlap(bra, ops, ket, dbg=False):
     startTime = time.time()
-    print ""
-    print "bra:"
+    print("")
+    print("bra:")
     for t in bra:
-        print t
-    print "ops:"
+        print(t)
+    print("ops:")
     for t in ops:
-        print t
-    print "ket:"
+        print(t)
+    print("ket:")
     for t in ket:
-        print t
+        print(t)
 #    print "<bra|ops|ket>:"
 
-    if dbg: print "expand terms"
+    if dbg: print("expand terms")
     ov_tmp = []
     if len(ops) != 0:
         for tb in bra:
@@ -442,59 +442,59 @@ def overlap(bra, ops, ket, dbg=False):
         for tb in bra:
             for tk in ket:
                 ov_tmp.append(sqa.multiplyTerms(tb, tk))
-    if dbg: print " (%.3f seconds)\n" %(time.time()-startTime)
+    if dbg: print(" (%.3f seconds)\n" %(time.time()-startTime))
 
     #    normal order form
-    print ""
-    if True: print "Making normal order for maximum contraction form, removing delta_{tu}, ..."
+    print("")
+    if True: print("Making normal order for maximum contraction form, removing delta_{tu}, ...")
     startTime = time.time()
     ov_tmp2= []
     i = 0
     for t in ov_tmp:
         i += 1
-        if dbg: print "%d / %d "%(i, len(ov_tmp))
+        if dbg: print("%d / %d "%(i, len(ov_tmp)))
         term = sqa.normalOrder_maxcontraction( t )
         for tn in term:
-            if dbg: print tn
+            if dbg: print(tn)
         ov_tmp2 += term
-    if dbg: print " (%.3f seconds)\n" %(time.time()-startTime)
+    if dbg: print(" (%.3f seconds)\n" %(time.time()-startTime))
 
     #TODO: remove terms by vacuumFermi in sqaSLee
-    if dbg: print "remove delta_{tu} and delta"
+    if dbg: print("remove delta_{tu} and delta")
     if dbg: startTime = time.time()
     ov_tmp3= []
     for t in ov_tmp2:
         tn = sqa.vacuumFermi( t )
-        if dbg: print tn 
+        if dbg: print(tn) 
         ov_tmp3.append( tn )
-    if dbg: print ""
-    if dbg: print " (%.3f seconds)\n" %(time.time()-startTime)
+    if dbg: print("")
+    if dbg: print(" (%.3f seconds)\n" %(time.time()-startTime))
 
-    if dbg: print "contract form"
+    if dbg: print("contract form")
     if dbg: startTime = time.time()
     for t in ov_tmp3:
         t.contractDeltaFuncs_mrsf()
-        if dbg: print t
-    print " (%.3f seconds)\n" %(time.time()-startTime)
-    print ""
+        if dbg: print(t)
+    print(" (%.3f seconds)\n" %(time.time()-startTime))
+    print("")
     
-    if dbg: print "remove near zero terms"
+    if dbg: print("remove near zero terms")
     if dbg: startTime = time.time()
     sqa.termChop(ov_tmp3)
     if True: 
         for t in ov_tmp3:
-            print t
-        print ""
-    print ""
-    if dbg: print " (%.3f seconds)\n" %(time.time()-startTime)
+            print(t)
+        print("")
+    print("")
+    if dbg: print(" (%.3f seconds)\n" %(time.time()-startTime))
 
     if False: 
-      print ""
-      if True: print "Combine terms"
+      print("")
+      if True: print("Combine terms")
       sqa.combineTerms(ov_tmp3)
       if True: 
          for t in ov_tmp3:
-           print t
+           print(t)
       
     return ov_tmp3
 
@@ -575,30 +575,30 @@ if __name__ == '__main__':
 
 
     if dbg: 
-        print "w00_ket"
+        print("w00_ket")
         for t in w00_ket:
-            print t
-        print ""
-        print "w00_bra"
+            print(t)
+        print("")
+        print("w00_bra")
         for t in w00_bra:
-            print t
-        print ""
-        print "w10_ket"
+            print(t)
+        print("")
+        print("w10_ket")
         for t in w10_ket:
-            print t
-        print ""
-        print "w10_bra"
+            print(t)
+        print("")
+        print("w10_bra")
         for t in w10_bra:
-            print t
-        print ""
-        print "w1p1_ket"
+            print(t)
+        print("")
+        print("w1p1_ket")
         for t in w1p1_ket:
-            print t
-        print ""
-        print "w1p1_bra"
+            print(t)
+        print("")
+        print("w1p1_bra")
         for t in w1p1_bra:
-            print t
-        print ""
+            print(t)
+        print("")
 
 #
 #  S00 = <MRSF(0,0) | MRSF(0,0)>
@@ -815,9 +815,9 @@ if __name__ == '__main__':
 #
 #  T11ab = <MRSF(1,0)| a^+_{u beta} a_{t alpha} |MRSF(1,1)>
 #
-#    print "SDTDM <10|a^+_ub a_ta|11>"
-#    ops = [t_ub_cre, t_ta_des]
-#    T11ab = overlap(w10_bra, ops, w1p1_ket, dbg=0)
+    print("SDTDM <10|a^+_ub a_ta|11>")
+    ops = [t_ub_cre, t_ta_des]
+    T11ab = overlap(w10_bra, ops, w1p1_ket, dbg=0)
 
 #
 #  T11ba = <MRSF(1,0)| a^+_{u alpha} a_{t beta} |MRSF(1,1)> = 0

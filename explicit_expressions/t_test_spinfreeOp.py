@@ -30,47 +30,47 @@ t_ops2= [ sqa.sfExOp([a[2], a[3], i[2], i[3]]) ]
 Op = t_ts1 + t_ops1 + W_ts1 + W_ops1 + W_ts2 + W_ops2 + t_ts2 + t_ops2
 
 term = sqa.term(1.0, [], Op)
-print "pure"
-print term
-print ""
+print("pure")
+print(term)
+print("")
 
-print "normal order form"
+print("normal order form")
 Nterm = sqa.normalOrder( term )
 for t in Nterm:
-    print t
-print ""
+    print(t)
+print("")
 
-print "HF Fermi expectation form"
+print("HF Fermi expectation form")
 result = []
 for t in Nterm:
     tmp = sqa.HFFermi( t )
     result.append( tmp )
-    print tmp
-print ""
+    print(tmp)
+print("")
 
-print "contract form"
+print("contract form")
 for t in result:
     t.contractDeltaFuncs()
-    print t
-print ""
+    print(t)
+print("")
 
-print "remove near zero terms"
+print("remove near zero terms")
 sqa.termChop(result)
 for t in result:
-    print t
-print ""
+    print(t)
+print("")
 
 sqa.combineTerms(result)
-print "combined terms"
+print("combined terms")
 for t in result:
-    print t
-print ""
+    print(t)
+print("")
 
-print "change idx"
+print("change idx")
 result2 = []
 for t in result:
     tmp = sqa.idxname( t )
     result2.append( tmp )
-    print tmp
-print ""
+    print(tmp)
+print("")
 

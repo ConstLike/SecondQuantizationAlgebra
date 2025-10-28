@@ -31,7 +31,7 @@ def vacuumFermi(inTerm):
 
   # check that inTerm is a term
   if not isinstance(inTerm, term):
-    raise TypeError, "inTerm must be of class term"
+    raise TypeError("inTerm must be of class term")
 
   # determine what types of operators the term contains
   has_creDesOps = False
@@ -45,11 +45,11 @@ def vacuumFermi(inTerm):
   # If not spin free excitation operators,
   # raise an error
   if has_sfExOps:
-    raise RuntimeError, "Present version of vacuumFermi can treat only CreDesOps"
+    raise RuntimeError("Present version of vacuumFermi can treat only CreDesOps")
 
   # if the term is already normal ordered, return it unchanged
   elif not inTerm.isNormalOrdered():
-    raise RuntimeError, "vacuumFermi requires normal ordered operators"
+    raise RuntimeError("vacuumFermi requires normal ordered operators")
 
   # Normal ordering for sfExOps
   elif has_creDesOps:
@@ -67,7 +67,7 @@ def rmOverlap(inTerm):
 
   # check that inTerm is a term
   if not isinstance(inTerm, term):
-    raise TypeError, "inTerm must be of class term"
+    raise TypeError("inTerm must be of class term")
 
   # determine what types of operators the term contains
   has_kronecker = False
@@ -88,7 +88,7 @@ def Pauli(inTerm):
 
   # check that inTerm is a term
   if not isinstance(inTerm, term):
-    raise TypeError, "inTerm must be of class term"
+    raise TypeError("inTerm must be of class term")
 
   # determine what types of operators the term contains
   has_creDesOps = False
@@ -120,7 +120,7 @@ def Pauli(inTerm):
 
   # if the term is already normal ordered, return it unchanged
   if not inTerm.isNormalOrdered():
-    raise RuntimeError, "HFFermi requires normal ordered operators"
+    raise RuntimeError("HFFermi requires normal ordered operators")
 
   # Make separate lists of the spin free excitation operators and other tensors
   X_list  = []
@@ -435,7 +435,7 @@ def rmTags(inTerm):
 
   # check that inTerm is a term
   if not isinstance(inTerm, term):
-    raise TypeError, "inTerm must be of class term"
+    raise TypeError("inTerm must be of class term")
 
   # determine what types of operators the term contains
   has_creDesOps = False
@@ -452,7 +452,7 @@ def rmTags(inTerm):
 #  if has_sfExOps or has_creDesOps or has_kronecker:
 #    raise RuntimeError, "Present version of Pauli only after contract"
   if not inTerm.isNormalOrdered():
-    raise RuntimeError, "HFFermi requires normal ordered operators"
+    raise RuntimeError("HFFermi requires normal ordered operators")
 
   new_tensors = []  
   for t in inTerm.tensors:
@@ -477,7 +477,7 @@ def HFFermi(inTerm):
 
   # check that inTerm is a term
   if not isinstance(inTerm, term):
-    raise TypeError, "inTerm must be of class term"
+    raise TypeError("inTerm must be of class term")
 
   # determine what types of operators the term contains
   has_creDesOps = False
@@ -502,14 +502,14 @@ def HFFermi(inTerm):
   # If not spin free excitation operators,
   # raise an error
   if not has_sfExOps:
-    raise RuntimeError, "Present version of HFFermi can treat only sfExOp"
+    raise RuntimeError("Present version of HFFermi can treat only sfExOp")
 
   if has_creDesOps and has_sfExOps:
-    raise RuntimeError, "Present version of HFFermi can treat only sfExOp"
+    raise RuntimeError("Present version of HFFermi can treat only sfExOp")
 
   # if the term is already normal ordered, return it unchanged
   elif not inTerm.isNormalOrdered():
-    raise RuntimeError, "HFFermi requires normal ordered operators"
+    raise RuntimeError("HFFermi requires normal ordered operators")
 
 
 #  # Normal ordering for creOp/desOp
@@ -615,12 +615,12 @@ def HFFermi(inTerm):
       elif t.name == 't2':
         t_list.append(t.copy())
       else:
-        raise RuntimeError, "terms should be sfExOp, kroneckerDelta, W, or t2"
+        raise RuntimeError("terms should be sfExOp, kroneckerDelta, W, or t2")
 
     # Initialize n, the number of remaining spin free excitation operators
     n = len(sfExOp_list)
     if n != 1:
-        raise RuntimeError, "terms should have single sfExOp"
+        raise RuntimeError("terms should have single sfExOp")
 
     const = inTerm.numConstant
     order = sfExOp_list[0].order
@@ -722,12 +722,12 @@ def HFFermi(inTerm):
       elif t.name == 't2Wb':
         t2Wb_list.append(t.copy())
       else:
-        raise RuntimeError, "terms should be sfExOp, kroneckerDelta, t2Wk, or t2Wb"
+        raise RuntimeError("terms should be sfExOp, kroneckerDelta, t2Wk, or t2Wb")
 
     # Initialize n, the number of remaining spin free excitation operators
     n = len(sfExOp_list)
     if n != 1:
-        raise RuntimeError, "terms should have single sfExOp"
+        raise RuntimeError("terms should have single sfExOp")
 
     has_active = False
     for idx in sfExOp_list[0].indices: 
@@ -880,12 +880,12 @@ def HFFermi(inTerm):
                     if Dup: break
 
             # apply active spin
-            print sfExOp_tmp.spin
-            print E_spin
+            print(sfExOp_tmp.spin)
+            print(E_spin)
             for i in range(len(sfExOp_tmp.spin[0])):
                 [sfExOp_tmp.spin[1][i] if x==sfExOp_tmp.spin[0][i] else x for x in E_spin[0]] 
                 [sfExOp_tmp.spin[1][i] if x==sfExOp_tmp.spin[0][i] else x for x in E_spin[1]] 
-            print E_spin
+            print(E_spin)
 
             sfExOp_core_tmp= sfExOp_list[0].copy()
             order_tmp      = sfExOp_list[0].order
@@ -994,7 +994,7 @@ def HFFermi(inTerm):
             #outTerm = term(const, inTerm.constants, other_list + sfExOp_list)
 
   else:
-    raise RuntimeError, "HFFermi failed to choose what to do."
+    raise RuntimeError("HFFermi failed to choose what to do.")
 
   return outTerm
 
@@ -1011,7 +1011,7 @@ def idxname(inTerm):
 
   # check that inTerm is a term
   if not isinstance(inTerm, term):
-    raise TypeError, "inTerm must be of class term"
+    raise TypeError("inTerm must be of class term")
 
 #  # determine what types of operators the term contains
 #  has_creDesOps = False
@@ -1032,7 +1032,7 @@ def idxname(inTerm):
 
   # if the term is already normal ordered, return it unchanged
   elif not inTerm.isNormalOrdered():
-    raise RuntimeError, "HFFermi requires normal ordered operators"
+    raise RuntimeError("HFFermi requires normal ordered operators")
 
 #  # Normal ordering for creOp/desOp
 #  elif has_creDesOps:
@@ -1182,7 +1182,7 @@ def idxname(inTerm):
     outTerm = term(inTerm.numConstant, inTerm.constants, Op_list)
 
   else:
-    raise RuntimeError, "HFFermi failed to choose what to do."
+    raise RuntimeError("HFFermi failed to choose what to do.")
 
   return outTerm
 
@@ -1201,7 +1201,7 @@ def weight_factor(inTerm):
 
   # check that inTerm is a term
   if not isinstance(inTerm, term):
-    raise TypeError, "inTerm must be of class term"
+    raise TypeError("inTerm must be of class term")
 
 #  # determine what types of operators the term contains
 #  has_creDesOps = False
@@ -1222,7 +1222,7 @@ def weight_factor(inTerm):
 
   # if the term is already normal ordered, return it unchanged
   elif not inTerm.isNormalOrdered():
-    raise RuntimeError, "HFFermi requires normal ordered operators"
+    raise RuntimeError("HFFermi requires normal ordered operators")
 
 #  # Normal ordering for creOp/desOp
 #  elif has_creDesOps:
@@ -1357,7 +1357,7 @@ def weight_factor(inTerm):
     outTerm = term(scal*inTerm.numConstant, inTerm.constants, Op_list)
 
   else:
-    raise RuntimeError, "HFFermi failed to choose what to do."
+    raise RuntimeError("HFFermi failed to choose what to do.")
 
   return outTerm
 
@@ -1378,7 +1378,7 @@ def sort_noeqidx_terms(Terms_List):
         else:
           idx_dict[idx.name] += 1 
 
-    test = sum(1 for i in idx_dict.values() if i >= 3) 
+    test = sum(1 for i in list(idx_dict.values()) if i >= 3) 
 
     if test == 0:
       neq_l.append(terms)
@@ -1391,7 +1391,7 @@ def SpinFree(inTerm):
   ""
   # check that inTerm is a term
   if not isinstance(inTerm, term):
-    raise TypeError, "inTerm must be of class term"
+    raise TypeError("inTerm must be of class term")
 
   # determine what types of operators the term contains
   has_creDesOps = False
@@ -1405,14 +1405,14 @@ def SpinFree(inTerm):
   # If not spin free excitation operators,
   # raise an error
   if not has_sfExOps:
-    raise RuntimeError, "Present version of HFFermi can treat only sfExOp"
+    raise RuntimeError("Present version of HFFermi can treat only sfExOp")
 
   if has_creDesOps and has_sfExOps:
-    raise RuntimeError, "Present version of HFFermi can treat only sfExOp"
+    raise RuntimeError("Present version of HFFermi can treat only sfExOp")
 
   # if the term is already normal ordered, return it unchanged
   elif not inTerm.isNormalOrdered():
-    raise RuntimeError, "HFFermi requires normal ordered operators"
+    raise RuntimeError("HFFermi requires normal ordered operators")
 
   # Normal ordering for sfExOps
   elif has_sfExOps:
@@ -1429,7 +1429,7 @@ def SpinFree(inTerm):
     # Initialize n, the number of remaining spin free excitation operators
     n = len(sfExOp_list)
     if n != 1:
-        raise RuntimeError, "terms should have single sfExOp"
+        raise RuntimeError("terms should have single sfExOp")
 
     # obtain rm same index in Spin-Free Op 
     sfExOp_tmp = sfExOp_list[0]
@@ -1464,7 +1464,7 @@ def SpinFree(inTerm):
     outTerm = term(const_tmp, inTerm.constants, other_list + [sfExOp_tmp])
 
   else:
-    raise RuntimeError, "HFFermi failed to choose what to do."
+    raise RuntimeError("HFFermi failed to choose what to do.")
 
   return outTerm
 

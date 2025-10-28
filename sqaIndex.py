@@ -16,6 +16,9 @@
 #   J. Chem. Phys. 130, 124102 (2009)
 
 
+# Python 3 compatibility: cmp() function was removed in Python 3
+def cmp(a, b):
+    return (a > b) - (a < b)
 
 
 # The index class is used to represent a tensor index.
@@ -57,7 +60,7 @@ class index(object):
     indType = []
     for l in indexType:
       if not ( type(l) in [type([]), type(())] ):
-        raise TypeError, "indexType must be a list or tuple of lists or tuples of strings"
+        raise TypeError("indexType must be a list or tuple of lists or tuples of strings")
       indType.append([])
       indType[-1].extend(l)
       indType[-1].sort()
@@ -67,23 +70,23 @@ class index(object):
       self.indType.append(())
       for s in l:
         if type(s) != type('a'):
-          raise TypeError, "indexType must be a list or tuple of lists or tuples of strings"
+          raise TypeError("indexType must be a list or tuple of lists or tuples of strings")
         self.indType[-1] = self.indType[-1] + (s,)
     self.indType = tuple(self.indType)
 
     # Initialize flag for whether the index is summed over
     if type(isSummed) != type(True):
-      raise TypeError, "isSummed must be True or False"
+      raise TypeError("isSummed must be True or False")
     self.isSummed = isSummed
 
     # Initialize flag for whether the index is external one
     if type(isExt) != type(True):
-      raise TypeError, "isExt must be True or False"
+      raise TypeError("isExt must be True or False")
     self.isExt = isExt
 
   def __cmp__(self,other):
     if (not isinstance(other,index)):
-      raise ValueError, "can only compare index class with other index class objects."
+      raise ValueError("can only compare index class with other index class objects.")
 #     retval = cmp(self.isExt, other.isExt)
 #     if retval != 0:
 #       return retval
@@ -94,6 +97,37 @@ class index(object):
     if retval != 0:
       return retval
     return cmp(self.indType, other.indType)
+
+  # Python 3 compatibility: rich comparison methods based on __cmp__
+  def __lt__(self, other):
+    if not isinstance(other, index):
+      return NotImplemented
+    return self.__cmp__(other) < 0
+
+  def __le__(self, other):
+    if not isinstance(other, index):
+      return NotImplemented
+    return self.__cmp__(other) <= 0
+
+  def __eq__(self, other):
+    if not isinstance(other, index):
+      return False
+    return self.__cmp__(other) == 0
+
+  def __ne__(self, other):
+    if not isinstance(other, index):
+      return True
+    return self.__cmp__(other) != 0
+
+  def __gt__(self, other):
+    if not isinstance(other, index):
+      return NotImplemented
+    return self.__cmp__(other) > 0
+
+  def __ge__(self, other):
+    if not isinstance(other, index):
+      return NotImplemented
+    return self.__cmp__(other) >= 0
 
   def __hash__(self):
     "Returns a hash tag. This implementation is a sort of ad hoc. So, this may cause some problem ..."

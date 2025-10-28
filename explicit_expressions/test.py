@@ -21,34 +21,34 @@ t1aa = sqa.tensor('t1aa', [q0, q1], [])
 q0_c = sqa.creOp(q0)
 q1_d = sqa.desOp(q1)
 term = sqa.term(1.0, [], [t1aa, q0_c, q1_d, h2abab, p0_c, p1_c, p3_d, p2_d])
-print term
-print ''
+print(term)
+print('')
 result = sqa.normalOrder(term)
 for t in result:
-  print t
-print ''
+  print(t)
+print('')
 for t in result:
   t.contractDeltaFuncs()
-  print t
-print ''
-print result[1].tensors[1].indices[0].indType
+  print(t)
+print('')
+print(result[1].tensors[1].indices[0].indType)
 sqa.termChop(result)
 for t in result:
-  print t
-print ''
+  print(t)
+print('')
 sqa.combineTerms(result)
-print "combined terms"
+print("combined terms")
 for t in result:
-    print t
-print ""
-print result[1].tensors[1].indices[0].indType
-print ""
-print "change idx"
+    print(t)
+print("")
+print(result[1].tensors[1].indices[0].indType)
+print("")
+print("change idx")
 result2 = []
 for t in result:
     tmp = sqa.idxname( t )
     result2.append( tmp )
-    print tmp
-print ""
+    print(tmp)
+print("")
 
 

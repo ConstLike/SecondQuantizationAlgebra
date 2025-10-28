@@ -226,18 +226,18 @@ def genCSF(string, S, Ms, bra=False, ket=False):
     return terms 
 
 def overlap(bra, ops, ket, dbg=False):
-    print "bra:"
+    print("bra:")
     for t in bra:
-        print t
-    print "ops:"
+        print(t)
+    print("ops:")
     for t in ops:
-        print t
-    print "ket:"
+        print(t)
+    print("ket:")
     for t in ket:
-        print t
-    print "<bra|ops|ket>:"
+        print(t)
+    print("<bra|ops|ket>:")
 
-    if dbg: print "expand terms"
+    if dbg: print("expand terms")
     ov_tmp = []
     if len(ops) != 0:
         for tb in bra:
@@ -252,7 +252,7 @@ def overlap(bra, ops, ket, dbg=False):
                 ov_tmp.append(sqa.multiplyTerms(tb, tk))
 
     #    normal order form
-    if dbg: print "normal Order for maximum contraction form"
+    if dbg: print("normal Order for maximum contraction form")
     ov_tmp2= []
     i = 0
     for t in ov_tmp:
@@ -264,26 +264,26 @@ def overlap(bra, ops, ket, dbg=False):
         ov_tmp2 += term
 
     #TODO: remove terms by vacuumFermi in sqaSLee
-    if dbg: print "remove delta_{tu} and delta"
+    if dbg: print("remove delta_{tu} and delta")
     ov_tmp3= []
     for t in ov_tmp2:
         tn = sqa.vacuumFermi( t )
         #print tn 
         ov_tmp3.append( tn )
-    if dbg: print ""
+    if dbg: print("")
 
-    if dbg: print "contract form"
+    if dbg: print("contract form")
     for t in ov_tmp3:
         t.contractDeltaFuncs()
-        if dbg: print t
-    if dbg: print ""
+        if dbg: print(t)
+    if dbg: print("")
     
-    if dbg: print "remove near zero terms"
+    if dbg: print("remove near zero terms")
     sqa.termChop(ov_tmp3)
     if dbg: 
         for t in ov_tmp3:
-            print t
-        print ""
+            print(t)
+        print("")
 
 #    if dbg: print "apply Pauli principle"
 #    ov = []
@@ -293,29 +293,29 @@ def overlap(bra, ops, ket, dbg=False):
 #        ov.append( tn )
 #    if dbg:  print ""
 
-    if dbg: print "rm overlap"
+    if dbg: print("rm overlap")
     ov2 = []
     for t in ov_tmp3:
         tn = sqa.rmOverlap( t )
-        if dbg: print tn 
+        if dbg: print(tn) 
         ov2.append( tn )
-    if dbg:  print ""
+    if dbg:  print("")
 
-    if dbg: print "remove near zero terms"
+    if dbg: print("remove near zero terms")
     sqa.termChop(ov2)
     if dbg: 
         for t in ov2:
-            print t
-        print ""
+            print(t)
+        print("")
 
-    if dbg: print "remove tags"
+    if dbg: print("remove tags")
     ov_f = []
     for t in ov2:
         tn = sqa.rmTags( t )
-        print tn 
+        print(tn) 
         ov_f.append( tn )
-    if dbg: print ""
-    print ""
+    if dbg: print("")
+    print("")
 
     return ov_f 
 
@@ -363,25 +363,25 @@ if __name__ == '__main__':
     w10_bra += genCSF([1,1,1,1], S, Ms, bra=True)   # C-V
 
     if True:
-        print "w00_ket"
+        print("w00_ket")
         for t in w00_ket:
-            print t
-        print ""
-        print "w00_bra"
+            print(t)
+        print("")
+        print("w00_bra")
         for t in w00_bra:
-            print t
-        print ""
-        print "w10_ket"
+            print(t)
+        print("")
+        print("w10_ket")
         for t in w10_ket:
-            print t
-        print ""
-        print "w10_bra"
+            print(t)
+        print("")
+        print("w10_bra")
         for t in w10_bra:
-            print t
-        print ""
+            print(t)
+        print("")
 
     # overlap of <MRSF(0,0)|MRSF(0,0)> for sanity check
-    print "overlap <00|00>"
+    print("overlap <00|00>")
     ops = []
     S00 = overlap(w00_bra, ops, w00_ket, dbg=dbg)
 
