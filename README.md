@@ -7,7 +7,9 @@ The working equations of the full-internally contracted multireference configura
 ## Current Version
 
 **Maintainer**: Konstantin Komarov
+
 **Last Updated**: October 2025
+
 **Python Version**: 3.x (migrated and optimized from Python 2.x)
 
 ## Installation
