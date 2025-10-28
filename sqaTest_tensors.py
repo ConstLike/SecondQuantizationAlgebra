@@ -105,13 +105,61 @@ def test_tensor_with_operators():
     # Normal order the term
     result = sqa.normalOrder(term)
 
-    # Should produce delta and normal-ordered terms
-    if len(result) > 0:
-        print("  Normal ordering h1*a+*a produces", len(result), "terms")
+    # Should produce 1 term (already in normal order)
+    if len(result) == 1:
+        print("  Normal ordering h1(i,j)*a+_i*a_j produces", len(result), "term")
+        print("  Result:", result[0])
         print("  Test passed\n")
         return True
     else:
-        print("  ERROR: Normal ordering failed")
+        print("  ERROR: Expected 1 term, got", len(result))
+        return False
+
+def test_commutator_relations():
+    """Test fundamental anticommutation relations."""
+    print("Testing anticommutation relations...")
+
+    # Create indices
+    i = sqa.index('i', [], True)
+    j = sqa.index('j', [], True)
+
+    # Test [a_i, a+_j]_+ = δ_ij (anticommutator)
+    # Build term: a_i * a+_j
+    term1 = sqa.term(1.0, [], [sqa.desOp(i), sqa.creOp(j)])
+    result1 = sqa.normalOrder(term1)
+
+    # Build term: a+_j * a_i
+    term2 = sqa.term(1.0, [], [sqa.creOp(j), sqa.desOp(i)])
+    result2 = sqa.normalOrder(term2)
+
+    # After normal ordering:
+    # a_i * a+_j -> -a+_j * a_i + δ_ij
+    # a+_j * a_i -> a+_j * a_i (already normal)
+
+    # Check that result1 contains delta function
+    has_delta = False
+    delta_term = None
+    for term in result1:
+        for tensor in term.tensors:
+            if hasattr(tensor, 'name') and tensor.name == 'kdelta':
+                has_delta = True
+                delta_term = term
+                break
+        if has_delta:
+            break
+
+    if has_delta and len(result1) == 2:
+        print("  Anticommutation {a_i, a+_j} = δ_ij verified")
+        print("  Result has", len(result1), "terms:")
+        for t in result1:
+            print("   ", t)
+        print("  Test passed\n")
+        return True
+    else:
+        print("  ERROR: Expected 2 terms with delta function")
+        print("  Got", len(result1), "terms")
+        for t in result1:
+            print("   ", t)
         return False
 
 if __name__ == '__main__':
@@ -126,6 +174,7 @@ if __name__ == '__main__':
     all_passed &= test_two_electron_tensors()
     all_passed &= test_two_particle_density_matrix()
     all_passed &= test_tensor_with_operators()
+    all_passed &= test_commutator_relations()
 
     print("="*60)
     if all_passed:
