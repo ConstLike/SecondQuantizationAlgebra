@@ -126,12 +126,8 @@ def normalOrder(inTerm):
         for q in subOpString[conPair[0]+1:conPair[1]]:
           if not (q == 'contracted'):
             conSign *= -1
-      i = 0
-      while i < len(subOpString):
-        if subOpString[i] == 'contracted':
-          del(subOpString[i])
-        else:
-          i += 1
+      # Optimized: use list comprehension instead of del() in loop
+      subOpString = [op for op in subOpString if op != 'contracted']
       (sortSign,sortedOps) = sortOps(subOpString)
       totalSign = conSign * sortSign
       outTensors = []
@@ -385,24 +381,17 @@ def normalOrder_maxcontraction(inTerm):
     contractions = []
 
     #for i in range(maxConOrder+1):
-    i = maxConOrder 
+    i = maxConOrder
     subCons = makeTuples(i,contractionPairs)
-    #print "len subCons:\n", len(subCons) 
-    j = 0
-    while j < len(subCons):
-      creOpTags = []
-      desOpTags = []
-      for k in range(i):
-        creOpTags.append(subCons[j][k][1])
-        desOpTags.append(subCons[j][k][0])
-      if allDifferent(creOpTags) and allDifferent(desOpTags):
-        j += 1
-      else:
-        del(subCons[j])
-    for j in range(len(subCons)):
-      contractions.append(subCons[j])
+    #print "len subCons:\n", len(subCons)
+    # Optimized: use list comprehension instead of del() in loop
+    contractions = [
+      sub for sub in subCons
+      if allDifferent([sub[k][1] for k in range(i)]) and
+         allDifferent([sub[k][0] for k in range(i)])
+    ]
 
-    del(subCons,creOpTags,desOpTags,contractionPairs)
+    del(subCons,contractionPairs)
     #print "contractions:\n", contractions
 
     # For each contraction, generate the resulting term
@@ -422,12 +411,8 @@ def normalOrder_maxcontraction(inTerm):
         for q in subOpString[conPair[0]+1:conPair[1]]:
           if not (q == 'contracted'):
             conSign *= -1
-      i = 0
-      while i < len(subOpString):
-        if subOpString[i] == 'contracted':
-          del(subOpString[i])
-        else:
-          i += 1
+      # Optimized: use list comprehension instead of del() in loop
+      subOpString = [op for op in subOpString if op != 'contracted']
       (sortSign,sortedOps) = sortOps(subOpString)
       totalSign = conSign * sortSign
       outTensors = []
