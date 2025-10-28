@@ -16,7 +16,7 @@
 #   J. Chem. Phys. 130, 124102 (2009)
 
 
-from functools import cmp_to_key
+from functools import cmp_to_key, lru_cache
 from sqaOptions import options
 import time
 
@@ -29,29 +29,56 @@ def cmp(a, b):
 #--------------------------------------------------------------------------------------------------
 
 
-def makeTuples(n,inList):
-  "Returns a list of all n-tuples that can be formed from the elements of inList.\n" + \
-  "Warning:  behavior may be crazy if inList consists of mutable objects."
+@lru_cache(maxsize=4096)
+def _makeTuples_cached(n, inTuple):
+  """Cached version that works with tuples."""
+  inList = list(inTuple)
   outList = []
   if n == 0:
-    return [[]]
+    return [tuple()]
   if n == len(inList):
-    return [inList]
+    return [tuple(inList)]
   if n == 1:
-    for i in range(len(inList)):
-      outList.append([inList[i]])
-    return outList
+    return [tuple([elem]) for elem in inList]
   tempList = []
   for i in range(len(inList)-n+1):
     tempList.append(inList[i])
-  index = 0
   for i in range(len(tempList)):
-    subList = makeTuples(n-1,inList[i+1:])
-    for j in range(len(subList)):
-      outList.append([tempList[i]])
-      for k in range(len(subList[j])):
-        outList[-1].append(subList[j][k])
+    subList = _makeTuples_cached(n-1, tuple(inList[i+1:]))
+    for sub in subList:
+      outList.append(tuple([tempList[i]] + list(sub)))
   return outList
+
+def makeTuples(n,inList):
+  "Returns a list of all n-tuples that can be formed from the elements of inList.\n" + \
+  "Warning:  behavior may be crazy if inList consists of mutable objects."
+  # Convert to hashable types for caching
+  try:
+    inTuple = tuple(inList)
+    result = _makeTuples_cached(n, inTuple)
+    # Convert back to lists for compatibility
+    return [list(t) for t in result]
+  except TypeError:
+    # Fallback for unhashable types (shouldn't happen often)
+    outList = []
+    if n == 0:
+      return [[]]
+    if n == len(inList):
+      return [inList]
+    if n == 1:
+      for i in range(len(inList)):
+        outList.append([inList[i]])
+      return outList
+    tempList = []
+    for i in range(len(inList)-n+1):
+      tempList.append(inList[i])
+    for i in range(len(tempList)):
+      subList = makeTuples(n-1,inList[i+1:])
+      for j in range(len(subList)):
+        outList.append([tempList[i]])
+        for k in range(len(subList[j])):
+          outList[-1].append(subList[j][k])
+    return outList
 
 
 #--------------------------------------------------------------------------------------------------
@@ -60,10 +87,8 @@ def makeTuples(n,inList):
 
 def allDifferent(x):
   "Returns True if all the elements of x are different and False otherwise."
-  for i in range(len(x)):
-    if x[i] in x[i+1:]:
-      return False
-  return True
+  # Optimized: O(n) instead of O(n²)
+  return len(x) == len(set(x))
 
 
 #--------------------------------------------------------------------------------------------------
