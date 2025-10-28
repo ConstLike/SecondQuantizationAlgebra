@@ -501,26 +501,6 @@ def contractCoreOps_sf(inTerm):
         if i1 == i0:
           prefactor *= 2
           continue
-#old        if i1 in conPairs[0]:
-#old          inds.append(conPairs[0].index(i1))
-#old          i2 = conPairs[1][conPairs[0].index(i1)] - o1
-#old          if i2 == i0:
-#old            prefactor *= 2
-#old            continue
-#old          if i2 in conPairs[0]:
-#old            inds.append(conPairs[0].index(i2))
-#old            i3 = conPairs[1][conPairs[0].index(i2)] - o1
-#old            if i3 == i0:
-#old              prefactor *= 2
-#old              continue
-#old            if i3 in conPairs[0]:
-#old              inds.append(conPairs[0].index(i3))
-#old              i4 = conPairs[1][conPairs[0].index(i3)] - o1
-#old              if i4 == i0:
-#old                prefactor *= 2
-#old                continue
-#old              else:
-#old                raise RuntimeError, "NYI:recursive algorithm1"
         while i1 in conPairs[0]:
           inds.append(conPairs[0].index(i1))
           i1 = conPairs[1][conPairs[0].index(i1)] - o1
