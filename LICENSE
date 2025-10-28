@@ -1,0 +1,55 @@
+Second Quantization Algebra (SQA) Package - License
+
+Copyright (c) 2008-2009 Eric Neuscamman, Takeshi Yanai, Garnet K.-L. Chan
+Copyright (c) 2013 Masaaki Saitow
+Copyright (c) 2025 Konstantin Komarov (Python 3 migration)
+
+ACADEMIC AND RESEARCH LICENSE
+
+This software is provided for academic and research purposes.
+
+TERMS AND CONDITIONS:
+
+1. USAGE RIGHTS
+   - Free for academic and research purposes
+   - May be used, modified, and distributed for non-commercial purposes
+   - Proper citation required in all publications using this software
+
+2. CITATION REQUIREMENTS
+   When using this software, please cite:
+
+   a) E. Neuscamman, T. Yanai, and G. K.-L. Chan,
+      "Quadratic canonical transformation theory and higher order density matrices",
+      J. Chem. Phys. 130, 124102 (2009). DOI: 10.1063/1.3086932
+
+   b) M. Saitow, Y. Kurashige, and T. Yanai,
+      "Multireference configuration interaction theory using cumulant reconstruction
+       with internal contraction of density matrix renormalization group wave function",
+      J. Chem. Phys. 139, 044118 (2013). DOI: 10.1063/1.4816627
+
+   c) K. Komarov, H. Zhai, and G. K.-L. Chan,
+      "Accurate Spin-Orbit Coupling by Relativistic Mixed-Reference Spin-Flip-TDDFT",
+      J. Chem. Theory Comput. 19(3), 953-964 (2023). DOI: 10.1021/acs.jctc.2c01036
+
+3. RESTRICTIONS
+   - Commercial use requires separate license agreement
+   - No warranty provided (see below)
+   - Distribution must include this license file
+
+4. DISCLAIMER OF WARRANTY
+   This program is distributed in the hope that it will be useful, but WITHOUT
+   ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+   FOR A PARTICULAR PURPOSE.
+
+5. LIMITATION OF LIABILITY
+   In no event shall the authors or copyright holders be liable for any claim,
+   damages, or other liability arising from the use of this software.
+
+6. MODIFICATIONS
+   Modifications to this software should:
+   - Acknowledge original authors
+   - Document changes made
+   - Maintain this license
+
+For commercial licensing or questions, contact:
+Konstantin Komarov (constlike@gmail.com)

@@ -1,0 +1,11 @@
+include README.md
+include SQA_User_Guide.md
+include LICENSE
+include setup.py
+include sqaTest.py
+include sqaTest_tensors.py
+include sqaTest_mrsf.py
+include sqaTest_removeCoreOpPairs.py
+recursive-include MRSF *.py *.log
+recursive-include explicit_expressions *.py
+recursive-include mrci_codes *.py
