@@ -82,7 +82,7 @@ Validates common tensor types (h1, h2, a2, d1, d2) and symmetries.
 python3 sqaTest_mrsf.py
 ```
 
-Multi-reference spin-free T11ab calculation (benchmark: 2.3 seconds, 22 terms).
+Mixed Reference Spin-Flip TDDFT: T11ab calculation (benchmark: 2.3 seconds, 22 terms).
 
 ## Version History
 
