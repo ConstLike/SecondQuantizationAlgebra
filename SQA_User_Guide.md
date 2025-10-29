@@ -102,6 +102,108 @@ h1_sym = [sqa.symmetry((1,0), 1)]  # h(i,j) = h(j,i)
 h1 = sqa.tensor('h1', [i0, i1], h1_sym)
 ```
 
+#### Two-Electron Integrals and Mulliken Notation
+
+This package uses Mulliken notation for two-electron integrals. This is important convention that affects how integrals combine with creation and destruction operators.
+
+**Mulliken notation definition**:
+
+The two-electron integral in Mulliken notation (ij|kl) represents:
+
+```
+(ij|kl) = integral integral phi_i(r1) phi_j(r1) (1/r12) phi_k(r2) phi_l(r2) dr1 dr2
+```
+
+where r12 is distance between electrons 1 and 2.
+
+**Symmetry properties**:
+
+Mulliken integrals have these symmetries:
+- (ij|kl) = (ji|kl) for non-antisymmetrized integrals
+- (ij|kl) = (kl|ij) (particle exchange symmetry)
+- (ij|kl) = (ij|lk) for non-antisymmetrized integrals
+
+For antisymmetrized integrals used in this package:
+- (ij|kl) = -(ji|kl) (antisymmetric in first pair)
+- (ij|kl) = -(ij|lk) (antisymmetric in second pair)
+- (ij|kl) = (kl|ij) (particle exchange)
+
+**Critical convention - operator ordering**:
+
+When we construct Hamiltonian terms with two-electron integrals, destruction operators appear in **reverse order** relative to last two integral indices:
+
+```python
+# For integral h2(i,j,k,l) representing (ij|kl)
+# Operators are: a+_i a+_j a_l a_k (note: a_l a_k, not a_k a_l)
+```
+
+This is **mandatory** convention in this package.
+
+**Example - antisymmetrized two-electron integrals**:
+
+```python
+# Create indices
+p0 = sqa.index('p0', [], True)
+p1 = sqa.index('p1', [], True)
+p2 = sqa.index('p2', [], True)
+p3 = sqa.index('p3', [], True)
+
+# Define symmetries for antisymmetrized Mulliken integrals
+# Antisymmetry in first index pair (indices 0,1)
+sym_antisym_12 = sqa.symmetry((1,0,2,3), -1)  # (ij|kl) = -(ji|kl)
+# Exchange symmetry between index pairs (0,1) <-> (2,3)
+sym_exch_pairs = sqa.symmetry((2,3,0,1), 1)   # (ij|kl) = (kl|ij)
+
+# Create h2 tensor
+h2 = sqa.tensor('h2', [p0, p1, p2, p3], [sym_antisym_12, sym_exch_pairs])
+
+# Build Hamiltonian term
+# IMPORTANT: destruction operators in reverse order!
+# h2(p0,p1,p2,p3) corresponds to integral (p0 p1|p2 p3)
+# Operators: a+_p0 a+_p1 a_p3 a_p2 (note a_p3 a_p2 order)
+H_term = sqa.term(1.0, [], [h2,
+                             sqa.creOp(p0),
+                             sqa.creOp(p1),
+                             sqa.desOp(p3),  # p3 comes before p2
+                             sqa.desOp(p2)])
+```
+
+**Why this convention**:
+
+This ordering follows from second quantization theory where two-electron operator is:
+
+```
+H = (1/2) sum_ijkl (ij|kl) a+_i a+_j a_l a_k
+```
+
+The destruction operator order (a_l a_k instead of a_k a_l) comes from normal ordering conventions and ensures correct signs when evaluating matrix elements.
+
+**Common mistake**:
+
+```python
+# WRONG - destruction operators in wrong order
+H_wrong = sqa.term(1.0, [], [h2,
+                              sqa.creOp(p0),
+                              sqa.creOp(p1),
+                              sqa.desOp(p2),  # Wrong!
+                              sqa.desOp(p3)])
+
+# CORRECT - destruction operators reversed
+H_correct = sqa.term(1.0, [], [h2,
+                                sqa.creOp(p0),
+                                sqa.creOp(p1),
+                                sqa.desOp(p3),  # Correct
+                                sqa.desOp(p2)])
+```
+
+**Verification**:
+
+You can verify Mulliken convention by checking that your integrals satisfy:
+- h2(i,j,k,l) = -h2(j,i,k,l) for antisymmetrized case
+- h2(i,j,k,l) = h2(k,l,i,j) always
+
+These symmetries are implemented through symmetry objects shown in example above.
+
 ---
 
 ### 1.4 Symmetries (`sqa.symmetry`)
@@ -563,12 +665,13 @@ Key functions optimized for Python 3 compatibility:
 - We support only fermionic operators (no bosons)
 - We require antisymmetrized integrals for proper results
 - We use Einstein summation convention for repeated indices
-- We assume Mulliken notation for two-electron integrals
+- We assume Mulliken notation for two-electron integrals (see Section 1.3 for details)
 
 **Index ordering convention**:
 - Creation operators ordered right-to-left
 - Destruction operators ordered right-to-left
 - Normal order: all creation operators left of destruction operators
+- Two-electron integrals: destruction operators in **reverse** order (see Section 1.3)
 
 ---
 
