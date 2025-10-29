@@ -54,10 +54,13 @@ from sqaCommutator import \
   commutator
 
 from sqaMisc import \
-  allDifferent,     \
-  get_num_perms,    \
-  makePermutations, \
-  makeTuples
+  allDifferent,              \
+  get_num_perms,             \
+  makePermutations,          \
+  makeTuples,                \
+  contractDeltaFuncs_complete, \
+  filter_nonzero_terms,      \
+  filter_fully_contracted
 
 from sqaMisc2 import      \
   assign_rdm_types,       \

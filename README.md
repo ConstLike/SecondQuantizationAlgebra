@@ -105,6 +105,54 @@ Distinctions from the original SQA package:
   * Use of spin-free unitary group generator is made fully functional
   * A simple code generator integrated inside SQA
 
+## Recent Extensions (2025)
+
+### Helper Functions for Delta Function Handling
+
+Three new helper functions extend SQA functionality:
+
+#### `contractDeltaFuncs_complete(terms, zero_remaining=True)`
+
+Extension of built-in `term.contractDeltaFuncs()` that optionally zeros out terms with remaining kdelta(i,j) where i!=j.
+
+**Parameters:**
+- `terms`: list of term objects to process
+- `zero_remaining`: if True (default), zero out terms with remaining non-diagonal kdelta
+
+**Example:**
+```python
+import secondQuantizationAlgebra as sqa
+
+# Calculate overlap <aa|bb> (should be zero)
+# ... create terms with normalOrder() ...
+
+# Option 1: Auto-zero remaining kdelta (default)
+sqa.contractDeltaFuncs_complete(terms, zero_remaining=True)
+
+# Option 2: Keep remaining kdelta (standard SQA behavior)
+sqa.contractDeltaFuncs_complete(terms, zero_remaining=False)
+```
+
+**Note:** The built-in `contractDeltaFuncs()` only removes diagonal kdelta(i,i)=1. Non-diagonal kdelta(i,j) where i!=j are left in the term. This extension automatically zeros such terms, useful for evaluating overlap of orthogonal determinants.
+
+#### `filter_nonzero_terms(terms)`
+
+Filter out terms with zero coefficient (threshold: 1e-12).
+
+```python
+final_terms = sqa.filter_nonzero_terms(norm_terms)
+```
+
+#### `filter_fully_contracted(terms)`
+
+Filter out terms that still have operators (keep only vacuum expectation values).
+
+```python
+vev_terms = sqa.filter_fully_contracted(normalized_terms)
+```
+
+---
+
 ## Citations
 
 If you use or modify this version of SQA package in your own work, please cite the following publications:

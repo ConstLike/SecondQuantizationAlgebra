@@ -143,3 +143,129 @@ def get_num_perms(ti,bi):
 #--------------------------------------------------------------------------------------------------
 
 
+
+
+def contractDeltaFuncs_complete(terms, zero_remaining=True):
+    """
+    Contract kdelta functions with option to zero remaining deltas.
+
+    This is an extension of the built-in term.contractDeltaFuncs() method
+    that optionally zeros out terms with remaining kdelta(i,j) where i!=j.
+
+    Parameters
+    ----------
+    terms : list of term
+        List of term objects to process
+    zero_remaining : bool, default=True
+        If True, zero out terms with remaining kdelta(i,j) where i!=j
+        If False, keep terms with remaining kdelta (standard SQA behavior)
+
+    Returns
+    -------
+    list of term
+        Processed terms (original list is modified in-place)
+
+    Notes
+    -----
+    The built-in contractDeltaFuncs() only removes diagonal kdelta(i,i)=1.
+    Non-diagonal kdelta(i,j) where i!=j are left in the term.
+
+    With zero_remaining=True, this function automatically zeros such terms,
+    which is useful when evaluating overlap of orthogonal determinants.
+
+    Examples
+    --------
+    >>> # Option 1: Zero remaining kdelta (default)
+    >>> contractDeltaFuncs_complete(terms, zero_remaining=True)
+
+    >>> # Option 2: Keep remaining kdelta (standard SQA behavior)
+    >>> contractDeltaFuncs_complete(terms, zero_remaining=False)
+
+    References
+    ----------
+    Added by Stan Pavlov (2025) for SI-SA-REKS verification.
+    Extends SQA functionality without modifying core source code.
+    """
+
+    # Step 1: Call standard SQA contractDeltaFuncs for each term
+    for term in terms:
+        term.contractDeltaFuncs()
+
+    # Step 2: If zero_remaining=True, zero out terms with remaining kdelta
+    if zero_remaining:
+        for term in terms:
+            # Check if term has remaining kdelta functions
+            has_kdelta = any(t.name == 'kdelta' for t in term.tensors)
+            if has_kdelta:
+                # Zero out this term (kdelta(i,j) with i!=j gives 0)
+                term.numConstant = 0.0
+
+
+#--------------------------------------------------------------------------------------------------
+#--------------------------------------------------------------------------------------------------
+
+
+def filter_nonzero_terms(terms):
+    """
+    Filter out terms with zero coefficient.
+
+    Parameters
+    ----------
+    terms : list of term
+        List of term objects to filter
+
+    Returns
+    -------
+    list of term
+        Only non-zero terms
+
+    Examples
+    --------
+    >>> final_terms = filter_nonzero_terms(norm_terms)
+
+    References
+    ----------
+    Added by Stan Pavlov (2025) for SI-SA-REKS verification.
+    """
+    return [t for t in terms if abs(t.numConstant) > 1e-12]
+
+
+#--------------------------------------------------------------------------------------------------
+#--------------------------------------------------------------------------------------------------
+
+
+def filter_fully_contracted(terms):
+    """
+    Filter out terms that still have operators (keep only vacuum expectation values).
+
+    Parameters
+    ----------
+    terms : list of term
+        List of term objects to filter
+
+    Returns
+    -------
+    list of term
+        Only fully contracted terms (no operators)
+
+    Examples
+    --------
+    >>> final_terms = filter_fully_contracted(normalized_terms)
+
+    References
+    ----------
+    Added by Stan Pavlov (2025) for SI-SA-REKS verification.
+    """
+    from sqaTensor import creOp, desOp
+
+    result = []
+    for term in terms:
+        has_ops = any(isinstance(t, (creOp, desOp)) for t in term.tensors)
+        if not has_ops:
+            result.append(term)
+    return result
+
+
+#--------------------------------------------------------------------------------------------------
+#--------------------------------------------------------------------------------------------------
+
