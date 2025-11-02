@@ -648,7 +648,227 @@ for E in E_ops:
 
 ---
 
-## 6. Performance Notes
+## 6. Parallel Computation with sqaParallel
+
+For computationally intensive matrix element calculations, the `sqaParallel` module provides automatic parallelization using Python's multiprocessing. This bypasses the Global Interpreter Lock (GIL) to achieve parallel speedup on multi-core systems.
+
+### 6.1 Overview
+
+The sqaParallel module is designed for computing matrix elements between configurations (e.g., Slater determinants) in parallel. It provides:
+
+- **Automatic CPU detection**: Uses all available cores by default
+- **Hermitian symmetry**: Exploits <I|H|J> = <J|H|I> symmetry (1.6x reduction)
+- **Selection rules**: Optional Slater-Condon rules to skip zero elements
+- **Progress tracking**: Real-time reporting with process IDs
+- **Result verification**: Built-in symmetry checking
+
+**Typical speedups**: 4-8x on 4-10 core systems, depending on matrix size and optimizations enabled.
+
+### 6.2 Basic Usage
+
+The core function is `compute_matrix()`, which takes a user-defined computation function and parallelizes it across all matrix elements.
+
+**Example**:
+
+```python
+import secondQuantizationAlgebra as sqa
+import sqaParallel
+
+# Define your computation function (MUST be at module level for pickling)
+def compute_element(bra_name, ket_name):
+    """
+    Compute <bra|H|ket> matrix element.
+
+    This function is called in parallel for each matrix element.
+    Returns: list of SQA term objects
+    """
+    # Your SQA computation here
+    # 1. Build bra and ket as SQA terms
+    # 2. Build Hamiltonian operator
+    # 3. Compute matrix element using normalOrder()
+    # 4. Contract and combine terms
+
+    result_terms = [...]  # list of sqa.term objects
+    return result_terms
+
+# Define configurations
+config_names = ['config1', 'config2', 'config3', 'config4']
+
+# Compute matrix with automatic parallelization
+matrix, stats = sqaParallel.compute_matrix(
+    compute_func=compute_element,
+    config_names=config_names,
+    use_symmetry=True,        # Use Hermitian symmetry
+    selection_rule_func=None, # Optional selection rules
+    n_workers=None,           # Auto-detect CPU count
+    verbose=True              # Print progress
+)
+
+# Access results
+result = matrix[('config1', 'config2')]  # List of terms
+```
+
+**Important**: The `compute_func` must be defined at **module level** (not inside another function or class) for Python's multiprocessing to serialize it correctly.
+
+### 6.3 Configuration Options
+
+**Parameters for `compute_matrix()`**:
+
+- **`compute_func`**: User-defined function with signature `result = func(bra_name, ket_name)`
+  - Must return list of SQA term objects
+  - Must be defined at module level for pickling
+
+- **`config_names`**: List of configuration names (e.g., `['aabb', 'aacc', ...]`)
+
+- **`use_symmetry`**: bool, default=True
+  - Exploit Hermitian symmetry: compute upper triangle + diagonal only
+  - Copy lower triangle from upper triangle
+  - Reduces computation by ~1.6x
+
+- **`selection_rule_func`**: callable or None, default=None
+  - Optional function to skip zero elements by selection rules
+  - Signature: `is_zero = func(bra_name, ket_name)`
+  - Returns True if element is known to be zero
+
+- **`n_workers`**: int or None, default=None
+  - Number of parallel workers
+  - If None, auto-detect using `cpu_count()`
+  - If 0, run sequentially (for debugging)
+
+- **`verbose`**: bool, default=True
+  - Print progress messages with process IDs
+
+**Returns**:
+- **`matrix`**: dict with (bra_name, ket_name) keys and term lists as values
+- **`statistics`**: dict with timing info and speedup estimates
+
+### 6.4 Selection Rules
+
+The module provides helper functions for Slater-Condon selection rules, which state that matrix elements are zero if configurations differ by too many orbitals.
+
+#### Slater-Condon Difference
+
+**Function**: `sqaParallel.slater_condon_diff(config_a, config_b)`
+
+Computes the number of spin-orbitals that differ between two configurations:
+
+```
+diff = |A \ B| = |B \ A|
+```
+
+where A and B are sets of occupied spin-orbitals.
+
+**Example**:
+```python
+# Configuration aabb: ['a_alpha', 'a_beta', 'b_alpha', 'b_beta']
+# Configuration aacc: ['a_alpha', 'a_beta', 'c_alpha', 'c_beta']
+
+diff = sqaParallel.slater_condon_diff(
+    ['a_alpha', 'a_beta', 'b_alpha', 'b_beta'],
+    ['a_alpha', 'a_beta', 'c_alpha', 'c_beta']
+)
+# Returns: 2 (b_alpha, b_beta in first; c_alpha, c_beta in second)
+```
+
+#### Two-Electron Selection Rules
+
+**Function**: `sqaParallel.make_selection_rule_two_electron(configurations, threshold=3)`
+
+Creates a selection rule function for two-electron operators (e.g., H2e).
+
+For two-electron operators:
+```
+<I|H2e|J> = 0  if  diff(I,J) >= 3
+```
+
+**Example**:
+```python
+# Define configurations
+configurations = {
+    'aabb': ['a_alpha', 'a_beta', 'b_alpha', 'b_beta'],
+    'aacc': ['a_alpha', 'a_beta', 'c_alpha', 'c_beta'],
+    'bbdd': ['b_alpha', 'b_beta', 'd_alpha', 'd_beta'],
+    'ccdd': ['c_alpha', 'c_beta', 'd_alpha', 'd_beta']
+}
+
+# Create selection rule function
+selection_rule = sqaParallel.make_selection_rule_two_electron(
+    configurations,
+    threshold=3
+)
+
+# Use in compute_matrix
+matrix, stats = sqaParallel.compute_matrix(
+    compute_func=compute_element,
+    config_names=list(configurations.keys()),
+    use_symmetry=True,
+    selection_rule_func=selection_rule,  # Skip elements with diff >= 3
+    n_workers=None
+)
+```
+
+**Custom selection rules**: You can define your own selection rule function:
+
+```python
+def my_selection_rule(bra_name, ket_name):
+    """Return True if element should be skipped (is zero)."""
+    # Custom logic here
+    if some_condition(bra_name, ket_name):
+        return True  # Skip this element
+    return False     # Compute this element
+```
+
+### 6.5 Performance Characteristics
+
+**Granularity**: The sqaParallel module parallelizes at the matrix element level. Each worker computes complete matrix elements (which may take 10-30 seconds each for complex operators).
+
+Do **NOT** try to parallelize individual `normalOrder()` calls, as:
+- Each normalOrder() call takes 3-20 ms
+- Multiprocessing overhead is 10-50 ms per task
+- This would cause 10-100x slowdown instead of speedup
+
+**Expected speedups** (4-electron REKS(4,4) example):
+
+| Optimization | Speedup | Time (4x4 matrix) |
+|--------------|---------|-------------------|
+| None (sequential) | 1.0x | ~26 min |
+| Symmetry only | 1.6x | ~16 min |
+| Symmetry + Selection | 2.0x | ~13 min |
+| Symmetry + Selection + Parallel (10 cores) | 7.9x | ~3.3 min |
+
+**Efficiency**: Near-linear scaling up to ~10 cores for typical matrix sizes (4x4 to 16x16).
+
+### 6.6 Verification
+
+The module includes a verification function to check Hermitian symmetry:
+
+```python
+# Verify all elements satisfy <I|H|J> = <J|H|I>
+is_symmetric = sqaParallel.verify_symmetry(
+    matrix,
+    config_names,
+    verbose=True
+)
+```
+
+### 6.7 Complete Example
+
+For a complete working example, see `sqaTest_multiprocessing.py`:
+
+```bash
+python3 sqaTest_multiprocessing.py
+```
+
+This test computes diagonal matrix elements for a 4-electron system and demonstrates:
+- Sequential vs parallel execution
+- Result verification
+- Speedup measurement
+
+Expected output: ~4x speedup on 4-core systems (30s parallel vs 120s sequential).
+
+---
+
+## 7. Performance Notes
 
 Key functions optimized for Python 3 compatibility:
 

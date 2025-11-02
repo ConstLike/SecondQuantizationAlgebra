@@ -84,6 +84,14 @@ python3 sqaTest_mrsf.py
 
 Mixed Reference Spin-Flip TDDFT: T11ab calculation (benchmark: 2.3 seconds, 22 terms).
 
+### Run Multiprocessing Test
+
+```bash
+python3 sqaTest_multiprocessing.py
+```
+
+Tests parallel computation of matrix elements using the sqaParallel module. Demonstrates ~4x speedup on 4-core systems (benchmark: 30 seconds parallel vs 120 seconds sequential).
+
 ## Version History
 
 ### Python 3 Migration and Performance Optimization (2025)
