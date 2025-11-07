@@ -14,12 +14,17 @@
 #
 #   E. Neuscamman, T. Yanai, and G. K.-L. Chan.
 #   J. Chem. Phys. 130, 124102 (2009)
+#
+# OPTIMIZATION (2025-11-06):
+#   Modified normalOrder_maxcontraction() to use
+#   backtracking k-matching instead of generate-then-filter.
+# AUTHOR: Konstantin Komarov (constlike@gmail.com).
 
 
 from sqaTensor import tensor, kroneckerDelta, creOp, desOp, sfExOp
 from sqaTerm import term, sortOps
 from sqaIndex import index
-from sqaMisc import makeTuples, allDifferent, makePermutations, get_num_perms
+from sqaMisc import makeTuples, allDifferent, makePermutations, get_num_perms, generateValidMatchings
 from sqaOptions import options
 
 #--------------------------------------------------------------------------------------------------
@@ -378,20 +383,10 @@ def normalOrder_maxcontraction(inTerm):
     #print "maxConOrder:\n", maxConOrder
 
     # Generate maximum contractions
-    contractions = []
-
-    #for i in range(maxConOrder+1):
     i = maxConOrder
-    subCons = makeTuples(i,contractionPairs)
-    #print "len subCons:\n", len(subCons)
-    # Optimized: use list comprehension instead of del() in loop
-    contractions = [
-      sub for sub in subCons
-      if allDifferent([sub[k][1] for k in range(i)]) and
-         allDifferent([sub[k][0] for k in range(i)])
-    ]
+    contractions = list(generateValidMatchings(i, contractionPairs))
 
-    del(subCons,contractionPairs)
+    del(contractionPairs)
     #print "contractions:\n", contractions
 
     # For each contraction, generate the resulting term

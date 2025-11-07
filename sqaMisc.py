@@ -14,6 +14,11 @@
 #
 #   E. Neuscamman, T. Yanai, and G. K.-L. Chan.
 #   J. Chem. Phys. 130, 124102 (2009)
+#
+# OPTIMIZATION (2025-11-06):
+#   Added generateValidMatchings() function for
+#   efficient k-matching generation via backtracking.
+# AUTHOR: Konstantin Komarov (constlike@gmail.com).
 
 
 from functools import cmp_to_key, lru_cache
@@ -79,6 +84,47 @@ def makeTuples(n,inList):
         for k in range(len(subList[j])):
           outList[-1].append(subList[j][k])
     return outList
+
+
+#--------------------------------------------------------------------------------------------------
+#--------------------------------------------------------------------------------------------------
+
+
+def generateValidMatchings(k, edges):
+  """
+  Generate k-matchings where no vertex is used more than once.
+
+  Backtracking algorithm that generates only valid matchings.
+
+  Args:
+    k: Number of edges to select
+    edges: List of (left_vertex, right_vertex) tuples
+
+  Yields:
+    Lists of k edges where each vertex appears at most once
+  """
+  def backtrack(start_idx, selected, used_left, used_right, remaining_k):
+    if remaining_k == 0:
+      yield list(selected)
+      return
+
+    for idx in range(start_idx, len(edges)):
+      left, right = edges[idx]
+
+      if left in used_left or right in used_right:
+        continue
+
+      selected.append(edges[idx])
+      used_left.add(left)
+      used_right.add(right)
+
+      yield from backtrack(idx + 1, selected, used_left, used_right, remaining_k - 1)
+
+      selected.pop()
+      used_left.remove(left)
+      used_right.remove(right)
+
+  yield from backtrack(0, [], set(), set(), k)
 
 
 #--------------------------------------------------------------------------------------------------
