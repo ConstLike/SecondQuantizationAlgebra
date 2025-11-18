@@ -14,6 +14,12 @@
 #
 #   E. Neuscamman, T. Yanai, and G. K.-L. Chan.
 #   J. Chem. Phys. 130, 124102 (2009)
+#
+# OPTIMIZATION (2025-11-18) sortOps:
+#   Use standard bubble sort instead of bubble-with-restart
+#   Old algorithm had O(n^3) due to i=0 restart on every swap
+#   New algorithm is O(n^2) - standard bubble sort
+# AUTHOR: Konstantin Komarov (constlike@gmail.com).
 
 
 import threading
@@ -168,7 +174,7 @@ class term:
     # tensors
     for t in self.tensors:
       retval += str(t) + " "
-    
+
     return retval
 
   #------------------------------------------------------------------------------------------------
@@ -253,7 +259,7 @@ class term:
 #        i1 = t.indices[1]
 #        print i0.indType
 #        print i1.indType
-      
+
       # If the term is a delta funciton with a repeated index, remove it
       if isinstance(t, kroneckerDelta) and (t.indices[0] == t.indices[1]):
 #        print "2 ****************************"
@@ -316,7 +322,7 @@ class term:
     i = 0
     while i < len(self.tensors):
       t = self.tensors[i]
-      
+
       # If the term is a delta funciton with a repeated index, remove it
       if isinstance(t, kroneckerDelta) and (t.indices[0] == t.indices[1]):
         del(self.tensors[i])
@@ -461,7 +467,7 @@ class term:
   def isNormalOrdered(self):
     "Returns true if the term is in normal order and false otherwise"
 
-    creFlag  = False 
+    creFlag  = False
     desFlag  = False
     sfExFlag = False
     for t in self.tensors:
@@ -851,7 +857,7 @@ class term:
 #      print "WARNING: %i candidates tied for the top score." %nTopScore
 
     # Set the tensor list as the list with the 'best' index naming and ordering
-    self.tensors = best_tensor_list 
+    self.tensors = best_tensor_list
 
     # Apply the factor produced from the canonical ordering
     self.scale(best_factor)
@@ -1198,7 +1204,7 @@ def getcim(tenList, alphabet, tenCount = 0, alphaCount = 0, inputMaps = {}):
     # Add the sfExOp's indices to the ordered index list
     for i in t.indices:
       indexList.append(i)
-        
+
 
   if no_tensors_left or only_creDes_left or only_sfExOp_left:
 
@@ -1284,27 +1290,30 @@ def sortOps(unsortedOps, returnPermutation = False):
   Sorts a list of creation/destruction operators into normal order and alphebetically.
   Performs no contractions.  Returns the overall sign resulting from the sort and the sorted operator list.
   """
-  sortedOps = unsortedOps + []
-  i = 0
+  sortedOps = unsortedOps[:]  # Use slice copy instead of +[]
   sign = 1
+  n = len(sortedOps)
+
   if returnPermutation:
-    perm = list(range(len(unsortedOps)))
-  while i < len(sortedOps)-1:
-    if sortedOps[i] <= sortedOps[i+1]:
-       i += 1
-    else:
-      temp = sortedOps[i]
-      sortedOps[i] = sortedOps[i+1]
-      sortedOps[i+1] = temp
-      if returnPermutation:
-        temp = perm[i]
-        perm[i] = perm[i+1]
-        perm[i+1] = temp
-      i = 0
-      sign *= -1
-  if returnPermutation:
-    return (sign,sortedOps,perm)
-  return (sign,sortedOps)
+    perm = list(range(n))
+    # Standard bubble sort with permutation tracking
+    for i in range(n):
+      for j in range(n - 1 - i):
+        if sortedOps[j] > sortedOps[j+1]:
+          # Swap operators
+          sortedOps[j], sortedOps[j+1] = sortedOps[j+1], sortedOps[j]
+          perm[j], perm[j+1] = perm[j+1], perm[j]
+          sign *= -1
+    return (sign, sortedOps, perm)
+  else:
+    # Standard bubble sort without permutation tracking
+    for i in range(n):
+      for j in range(n - 1 - i):
+        if sortedOps[j] > sortedOps[j+1]:
+          # Swap operators
+          sortedOps[j], sortedOps[j+1] = sortedOps[j+1], sortedOps[j]
+          sign *= -1
+    return (sign, sortedOps)
 
 
 #--------------------------------------------------------------------------------------------------
@@ -1358,7 +1367,7 @@ def removeCoreOpPairs(inList):
         if not repeatedCreOp:
 
           # otherwise...
-          
+
           # create the matching destruction operator
           matchingDesOp = desOp(t.tensors[i].indices[0])
 
@@ -1642,8 +1651,4 @@ def removeVirtOps_sf(inList):
 
   if options.verbose:
     print("")
-
-
 #--------------------------------------------------------------------------------------------------
-
-

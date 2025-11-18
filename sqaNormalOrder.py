@@ -18,6 +18,8 @@
 # OPTIMIZATION (2025-11-06):
 #   Modified normalOrder_maxcontraction() to use
 #   backtracking k-matching instead of generate-then-filter.
+# OPTIMIZATION (2025-11-18):
+#   Use generateValidMatchings instead of makeTuples+allDifferent
 # AUTHOR: Konstantin Komarov (constlike@gmail.com).
 
 
@@ -97,21 +99,8 @@ def normalOrder(inTerm):
     # Generate all contractions
     contractions = []
     for i in range(maxConOrder+1):
-      subCons = makeTuples(i,contractionPairs)
-      j = 0
-      while j < len(subCons):
-        creOpTags = []
-        desOpTags = []
-        for k in range(i):
-          creOpTags.append(subCons[j][k][1])
-          desOpTags.append(subCons[j][k][0])
-        if allDifferent(creOpTags) and allDifferent(desOpTags):
-          j += 1
-        else:
-          del(subCons[j])
-      for j in range(len(subCons)):
-        contractions.append(subCons[j])
-    del(subCons,creOpTags,desOpTags,contractionPairs)
+      contractions.extend(generateValidMatchings(i, contractionPairs))
+    del(contractionPairs)
     #print "contractions:\n", contractions
 
     # For each contraction, generate the resulting term
@@ -191,11 +180,11 @@ def normalOrder(inTerm):
 
         # Loop over the number of contractions
         for nc in range(min(o1,o2)+1):
-          
+
           # Compute the order of excitation operator for the current number of contractions
           newOrder = o1 + o2 - nc
 
-          # Compute all nc-tuples of index numbers from e1 and e2, as well as all permutations of 
+          # Compute all nc-tuples of index numbers from e1 and e2, as well as all permutations of
           # the order in which the tuples may be combined to form a contraction
           perms = [0]
           if nc > 0:
@@ -248,7 +237,7 @@ def normalOrder(inTerm):
 
                 #lsh parity test
                 #print 'conPairs=', conPairs
-                parity_n = 0 
+                parity_n = 0
                 o1_l = [i for i in range(o1)]
                 o2_l = [i for i in range(o2)]
                 for i in range(len(conPairs[0])):
@@ -256,12 +245,12 @@ def normalOrder(inTerm):
                     p2 = conPairs[1][i]
                     parity_n += o1_l.index(p1)
                     #print 'parity = ', p1, p2, o1_l, o2_l, parity_n
-                    parity_n += o2_l.index(p2) 
+                    parity_n += o2_l.index(p2)
                     #print 'parity = ', p1, p2, o1_l, o2_l, parity_n
                     o1_l.remove(p1)
                     o2_l.remove(p2)
-                parity  = (-1)**(parity_n) 
-                #parity *= 2**(len(conPairs[0])) 
+                parity  = (-1)**(parity_n)
+                #parity *= 2**(len(conPairs[0]))
 
                 #lsh spin test
                 spin_dict = {}
@@ -270,24 +259,24 @@ def normalOrder(inTerm):
                     p2 = conPairs[1][i]
                     spin_dict[spin2f[p2]] = spin1e[p1]
 
-                spin_new_f = spin1f[:] 
+                spin_new_f = spin1f[:]
                 #print 'spin 1 = ', spin_new_f
                 for i in range(len(spin2f)):
                     if i not in conPairs[1]:
-                        spin_new_f.append(spin2f[i]+shift+1) 
+                        spin_new_f.append(spin2f[i]+shift+1)
                 #print 'spin 2 = ', spin_new_f
 
                 spin_new_e = []
                 for i in range(len(spin1e)):
                     if i not in conPairs[0]:
-                        spin_new_e.append(spin1e[i]) 
+                        spin_new_e.append(spin1e[i])
 
                 #print 'spin 3 = ', spin_new_e
                 for i in spin2e:
                     if i not in spin_dict:
-                        spin_new_e.append(i+shift+1) 
+                        spin_new_e.append(i+shift+1)
                     else:
-                        spin_new_e.append(spin_dict[i]) 
+                        spin_new_e.append(spin_dict[i])
                 #print 'spin 4 = ', spin_new_e
 
                 # Ensure that all slots in the index list have been filled
@@ -306,7 +295,7 @@ def normalOrder(inTerm):
 
       # Decrement the counter for the number of excitation operators
       n -= 1; #print "MADE OK!!!"
-      
+
     # Set the return value as the final iteration's output terms
     outTerms = iter_output_terms
 
@@ -503,7 +492,7 @@ def contractCoreOps_sf(inTerm):
             prefactor *= 2
             break
 #
-        
+
     # Initialize the term's tensor list
     tensorList = other_list[:]
 
@@ -579,5 +568,3 @@ def contractCoreOps_sf(inTerm):
   return outTerms
 #--------------------------------------------------------------------------------------------------
 #--------------------------------------------------------------------------------------------------
-
-
