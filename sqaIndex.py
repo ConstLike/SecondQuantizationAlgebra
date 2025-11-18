@@ -141,5 +141,67 @@ class index(object):
     return (self.name, self.indType, self.isSummed, self.isExt)
 
   def copy(self):
-    "Returns a deep copy of the index"
-    return index(self.name, self.indType, self.isSummed, self.isExt)
+    "Returns a deep copy of the index - uses caching if enabled"
+    return cached_index(self.name, self.indType, self.isSummed, self.isExt)
+
+
+#--------------------------------------------------------------------------------------------------
+# INDEX INTERNING - Object caching to reduce memory allocations
+#--------------------------------------------------------------------------------------------------
+
+# Module-level cache for index objects
+_INDEX_CACHE = {}
+_CACHE_STATS = {'hits': 0, 'misses': 0}
+# Keep reference to original index class (before potential monkey patching)
+_INDEX_CLASS = index
+
+def cached_index(name, indexType=(), isSummed=False, isExt=False):
+    """
+    Factory function that returns cached index objects when possible.
+    """
+    # Normalize indexType to tuple of tuples for hashing
+    normalized_type = []
+    for l in indexType:
+        if type(l) in [type([]), type(())]:
+            sorted_l = sorted(l)
+            normalized_type.append(tuple(sorted_l))
+        else:
+            # Handle single string case
+            normalized_type.append((l,))
+    normalized_type = tuple(normalized_type)
+
+    # Create cache key
+    key = (str(name), normalized_type, bool(isSummed), bool(isExt))
+
+    # Check cache
+    if key in _INDEX_CACHE:
+        _CACHE_STATS['hits'] += 1
+        return _INDEX_CACHE[key]
+
+    # Cache miss - create new index
+    # Use _INDEX_CLASS (original class) to avoid recursion with monkey patching
+    _CACHE_STATS['misses'] += 1
+    idx = object.__new__(_INDEX_CLASS)
+    _INDEX_CLASS.__init__(idx, name, indexType, isSummed, isExt)
+    _INDEX_CACHE[key] = idx
+    return idx
+
+
+def get_index_cache_stats():
+    """Return statistics about index cache performance"""
+    total = _CACHE_STATS['hits'] + _CACHE_STATS['misses']
+    hit_rate = 100.0 * _CACHE_STATS['hits'] / total if total > 0 else 0
+    return {
+        'hits': _CACHE_STATS['hits'],
+        'misses': _CACHE_STATS['misses'],
+        'total': total,
+        'hit_rate': hit_rate,
+        'cache_size': len(_INDEX_CACHE)
+    }
+
+
+def clear_index_cache():
+    """Clear the index cache (useful for testing)"""
+    global _INDEX_CACHE, _CACHE_STATS
+    _INDEX_CACHE = {}
+    _CACHE_STATS = {'hits': 0, 'misses': 0}
