@@ -14,6 +14,10 @@
 #
 #   E. Neuscamman, T. Yanai, and G. K.-L. Chan.
 #   J. Chem. Phys. 130, 124102 (2009)
+#
+# OPTIMIZATION (2025-11-18):
+#   Added cached_index()
+# AUTHOR: Konstantin Komarov (constlike@gmail.com).
 
 
 # Python 3 compatibility: cmp() function was removed in Python 3
